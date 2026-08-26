@@ -330,13 +330,24 @@ function renderLoadChart(daily) {
   });
 }
 
+function rollingAverage(values, window) {
+  return values.map((_, i) => {
+    const slice = values.slice(Math.max(0, i - window + 1), i + 1).filter(v => v != null);
+    if (!slice.length) return null;
+    return slice.reduce((a, b) => a + b, 0) / slice.length;
+  });
+}
+
 function renderSleepChart(daily) {
+  const scores = daily.map(d => d.sleep_score);
+  const trend = rollingAverage(scores, 7);
   new Chart(document.getElementById('sleepChart'), {
     type: 'line',
     data: {
       labels: daily.map(d => d.date),
       datasets: [
-        { label: 'Sleep score', data: daily.map(d => d.sleep_score), borderColor: '#6FA46A', backgroundColor: '#6FA46A22', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2, spanGaps: true },
+        { label: 'Sleep score', data: scores, borderColor: '#6FA46A55', backgroundColor: '#6FA46A15', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 1, spanGaps: true },
+        { label: '7-day trend', data: trend, borderColor: '#6FA46A', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2.5, spanGaps: true },
       ]
     },
     options: {
@@ -346,7 +357,7 @@ function renderSleepChart(daily) {
         x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
         y: { min: 0, max: 100, grid: { color: '#2B2E35' } }
       },
-      plugins: { legend: { display: false } }
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
     }
   });
 }
