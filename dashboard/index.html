@@ -204,6 +204,12 @@
     <canvas id="volumeChart" height="110"></canvas>
   </div>
 
+  <!-- Sleep score -->
+  <div class="panel span-12">
+    <div class="panel-label">Sleep score <span>180d</span></div>
+    <canvas id="sleepChart" height="60"></canvas>
+  </div>
+
   <!-- Strength progress -->
   <div class="panel span-12">
     <div class="panel-label">Strength progress <span>top lifts, session max weight</span></div>
@@ -324,6 +330,27 @@ function renderLoadChart(daily) {
   });
 }
 
+function renderSleepChart(daily) {
+  new Chart(document.getElementById('sleepChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'Sleep score', data: daily.map(d => d.sleep_score), borderColor: '#6FA46A', backgroundColor: '#6FA46A22', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+        y: { min: 0, max: 100, grid: { color: '#2B2E35' } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
 function isoWeek(dateStr) {
   const d = new Date(dateStr);
   d.setHours(0,0,0,0);
@@ -406,6 +433,7 @@ function renderStrengthChart(sets) {
   renderTiles(daily);
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);
+  renderSleepChart(daily);
   renderStrengthChart(data.strength_sets || []);
 })();
 
