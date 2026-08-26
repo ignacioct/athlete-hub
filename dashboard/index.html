@@ -166,6 +166,29 @@
 
   canvas { max-width: 100%; }
 
+  .section-header {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    padding: 4px 0 4px 12px;
+    margin: 12px 0 -4px;
+    border-left: 3px solid var(--line);
+  }
+  .grid > .section-header:first-child { margin-top: 0; }
+  .section-header .wip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-left: 8px;
+  }
+  .section-health { border-left-color: var(--good); }
+  .section-running { border-left-color: var(--run); }
+  .section-strength { border-left-color: var(--lift); }
+
   .header-right { display: flex; align-items: center; gap: 14px; }
   .sync-btn {
     font-family: 'IBM Plex Mono', monospace;
@@ -195,6 +218,9 @@
 
 <div class="grid">
 
+  <!-- ============ GENERAL HEALTH ============ -->
+  <div class="section-header section-health span-12">General health</div>
+
   <!-- Signature: readiness dial -->
   <div class="panel span-4">
     <div class="panel-label">Readiness <span>Form (CTL−ATL)</span></div>
@@ -205,16 +231,25 @@
     </div>
   </div>
 
-  <!-- Race calendar -->
-  <div class="panel span-8">
-    <div class="panel-label">Upcoming races</div>
-    <div id="races"></div>
-  </div>
-
   <!-- Daily metric tiles -->
-  <div class="panel span-12">
+  <div class="panel span-8">
     <div class="panel-label">Today <span id="tiles-date"></span></div>
     <div class="tiles" id="tiles"></div>
+  </div>
+
+  <!-- Sleep score -->
+  <div class="panel span-12">
+    <div class="panel-label">Sleep score <span>180d</span></div>
+    <canvas id="sleepChart" height="60"></canvas>
+  </div>
+
+  <!-- ============ RUNNING ============ -->
+  <div class="section-header section-running span-12">Running</div>
+
+  <!-- Race calendar -->
+  <div class="panel span-12">
+    <div class="panel-label">Upcoming races</div>
+    <div id="races"></div>
   </div>
 
   <!-- This week's workouts -->
@@ -235,15 +270,13 @@
     <canvas id="volumeChart" height="110"></canvas>
   </div>
 
-  <!-- Sleep score -->
-  <div class="panel span-12">
-    <div class="panel-label">Sleep score <span>180d</span></div>
-    <canvas id="sleepChart" height="60"></canvas>
-  </div>
+  <!-- ============ STRENGTH (WIP) ============ -->
+  <div class="section-header section-strength span-12">Strength <span class="wip">WIP — Hevy not yet connected</span></div>
 
   <!-- Strength progress -->
   <div class="panel span-12">
     <div class="panel-label">Strength progress <span>top lifts, session max weight</span></div>
+    <div id="strength-empty"></div>
     <canvas id="strengthChart" height="70"></canvas>
   </div>
 
@@ -342,16 +375,24 @@ const WORKOUT_STATUS_LABELS = { done: 'Done', missed: 'Missed', today: 'Today', 
 function renderWeeklyWorkouts(workouts) {
   const el = document.getElementById('weekly-workouts');
   if (!workouts || workouts.length === 0) {
-    el.innerHTML = '<div class="empty">No planned workouts this week.</div>';
+    el.innerHTML = '<div class="empty">No data for this week yet.</div>';
     return;
   }
   el.innerHTML = workouts.map(w => {
     const dayName = new Date(w.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    let detail;
+    let name, detail;
     if (w.status === 'rest') {
+      name = w.name || 'Rest day';
       detail = 'Rest day';
-    } else {
+    } else if (w.source === 'unplanned') {
+      // logged, but not on the plan
+      name = w.name;
+      const bits = [fmtKm(w.actual.distance_m), fmtMin(w.actual.duration_s), fmtPace(w.actual.avg_pace_s_per_km)].filter(Boolean);
+      detail = bits.length ? bits.join(', ') : 'Logged';
+    } else if (w.name) {
+      // planned (garmin_club or intervals), maybe matched to an actual
+      name = w.name;
       const plannedText = fmtMin(w.estimated_duration_s) ? `Planned ~${fmtMin(w.estimated_duration_s)}` : 'Planned';
       if (w.actual) {
         const bits = [fmtKm(w.actual.distance_m), fmtMin(w.actual.duration_s), fmtPace(w.actual.avg_pace_s_per_km)].filter(Boolean);
@@ -359,6 +400,10 @@ function renderWeeklyWorkouts(workouts) {
       } else {
         detail = plannedText;
       }
+    } else {
+      // nothing planned, nothing logged
+      name = '—';
+      detail = w.status === 'upcoming' ? '' : 'No activity logged';
     }
 
     return `
@@ -366,8 +411,8 @@ function renderWeeklyWorkouts(workouts) {
         <div class="workout-day">${dayName}</div>
         <div>
           <span class="badge badge-${w.status}">${WORKOUT_STATUS_LABELS[w.status] || w.status}</span>
-          <span class="workout-name">${w.name || w.sport || 'Workout'}</span>
-          <div class="workout-detail">${detail}</div>
+          <span class="workout-name">${name}</span>
+          ${detail ? `<div class="workout-detail">${detail}</div>` : ''}
         </div>
       </div>
     `;
@@ -476,6 +521,16 @@ function renderVolumeChart(activities) {
 }
 
 function renderStrengthChart(sets) {
+  const emptyEl = document.getElementById('strength-empty');
+  const canvas = document.getElementById('strengthChart');
+  if (!sets || sets.length === 0) {
+    emptyEl.innerHTML = '<div class="empty">No strength data yet — Hevy isn\'t connected (needs a Pro subscription). See the README\'s "Future work" section.</div>';
+    canvas.style.display = 'none';
+    return;
+  }
+  emptyEl.innerHTML = '';
+  canvas.style.display = '';
+
   const byExercise = {};
   sets.forEach(s => {
     if (!s.weight_kg) return;
