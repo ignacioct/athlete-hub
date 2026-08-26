@@ -92,18 +92,20 @@
   /* --- layout spans --- */
   .span-4 { grid-column: span 4; }
   .span-5 { grid-column: span 5; }
+  .span-6 { grid-column: span 6; }
   .span-7 { grid-column: span 7; }
   .span-8 { grid-column: span 8; }
   .span-12 { grid-column: span 12; }
 
   @media (max-width: 860px) {
-    .span-4, .span-5, .span-7, .span-8, .span-12 { grid-column: span 12; }
+    .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 { grid-column: span 12; }
   }
 
   /* --- readiness dial (signature element) --- */
   .dial-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .dial-value { font-family: 'IBM Plex Mono', monospace; font-size: 34px; font-weight: 600; margin-top: -8px; }
   .dial-caption { font-size: 12px; color: var(--text-dim); text-align: center; max-width: 220px; }
+  .recovery-caption { font-size: 12px; color: var(--text-dim); margin: -8px 0 14px; }
 
   /* --- stat tiles --- */
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -237,10 +239,35 @@
     <div class="tiles" id="tiles"></div>
   </div>
 
+  <!-- Recovery score -->
+  <div class="panel span-12">
+    <div class="panel-label">Recovery <span id="recovery-label">180d</span></div>
+    <div class="recovery-caption">Approximate, not Whoop's algorithm: 40% HRV vs. 30-day baseline + 30% resting HR vs. baseline (lower is better) + 30% sleep score.</div>
+    <canvas id="recoveryChart" height="60"></canvas>
+  </div>
+
   <!-- Sleep score -->
   <div class="panel span-12">
     <div class="panel-label">Sleep score <span>180d</span></div>
     <canvas id="sleepChart" height="60"></canvas>
+  </div>
+
+  <!-- HRV -->
+  <div class="panel span-6">
+    <div class="panel-label">HRV <span>180d</span></div>
+    <canvas id="hrvChart" height="80"></canvas>
+  </div>
+
+  <!-- Resting HR -->
+  <div class="panel span-6">
+    <div class="panel-label">Resting HR <span>180d</span></div>
+    <canvas id="rhrChart" height="80"></canvas>
+  </div>
+
+  <!-- Body battery -->
+  <div class="panel span-12">
+    <div class="panel-label">Body battery <span>daily range, 180d</span></div>
+    <canvas id="batteryChart" height="70"></canvas>
   </div>
 
   <!-- ============ RUNNING ============ -->
@@ -268,6 +295,12 @@
   <div class="panel span-5">
     <div class="panel-label">Weekly running volume <span>km</span></div>
     <canvas id="volumeChart" height="110"></canvas>
+  </div>
+
+  <!-- VO2 max -->
+  <div class="panel span-12">
+    <div class="panel-label">VO2 max <span>running, 180d</span></div>
+    <canvas id="vo2Chart" height="60"></canvas>
   </div>
 
   <!-- ============ STRENGTH (WIP) ============ -->
@@ -512,6 +545,165 @@ function renderSleepChart(daily) {
   });
 }
 
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function trailingAverage(values, i, window) {
+  // Baseline for day i from the `window` days strictly before it — excludes
+  // today so a single unusual reading can't skew its own comparison point.
+  const slice = values.slice(Math.max(0, i - window), i).filter(v => v != null);
+  if (!slice.length) return null;
+  return slice.reduce((a, b) => a + b, 0) / slice.length;
+}
+
+function computeRecovery(daily) {
+  const hrvVals = daily.map(d => d.hrv);
+  const rhrVals = daily.map(d => d.resting_hr);
+  return daily.map((d, i) => {
+    if (d.hrv == null || d.resting_hr == null || d.sleep_score == null) return null;
+    const hrvBaseline = trailingAverage(hrvVals, i, 30);
+    const rhrBaseline = trailingAverage(rhrVals, i, 30);
+    if (hrvBaseline == null || rhrBaseline == null) return null;
+    // 50 = at your own baseline; further above (HRV) / below (RHR) than
+    // baseline pushes toward 100, the opposite direction toward 0.
+    const hrvScore = clamp(50 + ((d.hrv - hrvBaseline) / hrvBaseline) * 200, 0, 100);
+    const rhrScore = clamp(50 - ((d.resting_hr - rhrBaseline) / rhrBaseline) * 200, 0, 100);
+    return Math.round(0.4 * hrvScore + 0.3 * rhrScore + 0.3 * d.sleep_score);
+  });
+}
+
+function recoveryColor(score) {
+  if (score == null) return '#83868C';
+  return score >= 67 ? '#6FA46A' : score >= 34 ? '#C6963C' : '#C1502E';
+}
+
+function renderRecoveryChart(daily) {
+  const scores = computeRecovery(daily);
+  const latest = scores.length ? scores[scores.length - 1] : null;
+  const labelEl = document.getElementById('recovery-label');
+  if (latest != null) {
+    const zone = latest >= 67 ? 'High' : latest >= 34 ? 'Moderate' : 'Low';
+    labelEl.textContent = `${latest} · ${zone} · 180d`;
+  }
+  new Chart(document.getElementById('recoveryChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [{
+        label: 'Recovery',
+        data: scores,
+        borderColor: '#8A8D93',
+        backgroundColor: 'transparent',
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2,
+        spanGaps: true,
+        segment: { borderColor: ctx => recoveryColor(scores[ctx.p1DataIndex]) },
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+        y: { min: 0, max: 100, grid: { color: '#2B2E35' } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function renderHrvChart(daily) {
+  const vals = daily.map(d => d.hrv);
+  const trend = rollingAverage(vals, 7);
+  new Chart(document.getElementById('hrvChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'HRV', data: vals, borderColor: '#4C8FBD55', backgroundColor: '#4C8FBD15', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 1, spanGaps: true },
+        { label: '7-day trend', data: trend, borderColor: '#4C8FBD', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2.5, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { grid: { color: '#2B2E35' } } },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function renderRhrChart(daily) {
+  const vals = daily.map(d => d.resting_hr);
+  const trend = rollingAverage(vals, 7);
+  new Chart(document.getElementById('rhrChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'Resting HR', data: vals, borderColor: '#C6963C55', backgroundColor: '#C6963C15', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 1, spanGaps: true },
+        { label: '7-day trend', data: trend, borderColor: '#C6963C', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2.5, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { grid: { color: '#2B2E35' } } },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function renderBatteryChart(daily) {
+  new Chart(document.getElementById('batteryChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'Min', data: daily.map(d => d.body_battery_min), borderColor: '#6FA46A88', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 1, spanGaps: true },
+        { label: 'Max', data: daily.map(d => d.body_battery_max), borderColor: '#6FA46A', backgroundColor: '#6FA46A22', fill: '-1', tension: 0.3, pointRadius: 0, borderWidth: 1.5, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+        y: { min: 0, max: 100, grid: { color: '#2B2E35' } }
+      },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function renderVo2Chart(daily) {
+  const vals = daily.map(d => d.vo2max_running);
+  new Chart(document.getElementById('vo2Chart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [{
+        label: 'VO2 max',
+        data: vals,
+        borderColor: '#4C8FBD',
+        backgroundColor: '#4C8FBD22',
+        fill: true,
+        tension: 0.2,
+        pointRadius: 3,
+        pointBackgroundColor: '#4C8FBD',
+        borderWidth: 2,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: '#2B2E35' } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
 function isoWeek(dateStr) {
   const d = new Date(dateStr);
   d.setHours(0,0,0,0);
@@ -603,9 +795,14 @@ function renderStrengthChart(sets) {
   renderRaces(data.races || []);
   renderTiles(daily);
   renderWeeklyWorkouts(data.weekly_workouts || []);
+  renderRecoveryChart(daily);
+  renderSleepChart(daily);
+  renderHrvChart(daily);
+  renderRhrChart(daily);
+  renderBatteryChart(daily);
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);
-  renderSleepChart(daily);
+  renderVo2Chart(daily);
   renderStrengthChart(data.strength_sets || []);
 })();
 
