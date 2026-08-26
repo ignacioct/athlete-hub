@@ -12,6 +12,8 @@ browser_profile/
 # it writes these to the CWD, not into data/, and they hold real health
 # data / auth tokens.
 garmin.db
+garmin.db-shm
+garmin.db-wal
 garmin_session.json
 debug.log
 downloaded_files/
