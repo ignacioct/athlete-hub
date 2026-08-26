@@ -247,13 +247,13 @@
   <div class="section-header section-running span-12">Running</div>
 
   <!-- Race calendar -->
-  <div class="panel span-12">
+  <div class="panel span-5">
     <div class="panel-label">Upcoming races</div>
     <div id="races"></div>
   </div>
 
   <!-- This week's workouts -->
-  <div class="panel span-12">
+  <div class="panel span-7">
     <div class="panel-label">This week's workouts <span>planned vs. actual</span></div>
     <div id="weekly-workouts"></div>
   </div>
@@ -374,11 +374,15 @@ const WORKOUT_STATUS_LABELS = { done: 'Done', missed: 'Missed', today: 'Today', 
 
 function renderWeeklyWorkouts(workouts) {
   const el = document.getElementById('weekly-workouts');
-  if (!workouts || workouts.length === 0) {
+  // Drop days with nothing planned and nothing logged — a rest day (planned
+  // as such) still shows, but a plain empty slot (e.g. a future Saturday
+  // with no plan yet) just adds noise.
+  const shown = (workouts || []).filter(w => w.name || w.status === 'rest');
+  if (shown.length === 0) {
     el.innerHTML = '<div class="empty">No data for this week yet.</div>';
     return;
   }
-  el.innerHTML = workouts.map(w => {
+  el.innerHTML = shown.map(w => {
     const dayName = new Date(w.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
     let name, detail;
