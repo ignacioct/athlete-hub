@@ -2,17 +2,15 @@
 # Run: python scripts/seed_races.py
 # After this, add new races by just asking Claude — it calls add_upcoming_race
 # via the MCP server, this file is only for a one-time initial import.
+#
+# Fill in your own races below, e.g.:
+#
+# races:
+#   - name: "Some Marathon"
+#     date: "YYYY-MM-DD"
+#     distance_km: 42.2
+#     priority: "A"          # 'A' (peak), 'B' (train through), or 'C' (tune-up)
+#     goal_time: "3:30:00"   # optional
+#     notes: "Peak race of the season."
 
-races:
-  - name: "Valencia Marathon"
-    date: "2026-12-06"
-    distance_km: 42.2
-    priority: "A"
-    goal_time: "3:30:00"
-    notes: "Peak race of the season."
-
-  - name: "Local 10K Tune-up"
-    date: "2026-10-18"
-    distance_km: 10
-    priority: "C"
-    notes: "Fitness check 7 weeks out from Valencia."
+races: []
