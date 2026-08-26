@@ -75,6 +75,9 @@ CREATE TABLE IF NOT EXISTS daily_metrics (
     ctl             REAL,                  -- from intervals.icu wellness (fitness)
     atl             REAL,                  -- from intervals.icu wellness (fatigue)
     form            REAL,                  -- ctl - atl
+    avg_respiration REAL,                  -- breaths/min, overnight average (Garmin)
+    avg_spo2        REAL,                  -- blood oxygen %, overnight average — sparse, only nights with pulse-ox enabled
+    lowest_spo2     REAL,
     updated_at      TEXT DEFAULT (datetime('now'))
 );
 
@@ -145,6 +148,9 @@ def get_conn(db_path: str | None = None):
 # since SQLite has no ADD COLUMN IF NOT EXISTS.
 _MIGRATIONS = [
     ("strength_sets", "prs_json", "TEXT"),
+    ("daily_metrics", "avg_respiration", "REAL"),
+    ("daily_metrics", "avg_spo2", "REAL"),
+    ("daily_metrics", "lowest_spo2", "REAL"),
 ]
 
 

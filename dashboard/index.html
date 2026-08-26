@@ -277,6 +277,13 @@
     <canvas id="recoveryChart" height="60"></canvas>
   </div>
 
+  <!-- Strain score -->
+  <div class="panel span-12">
+    <div class="panel-label">Strain <span id="strain-label">180d</span></div>
+    <div class="chart-caption">A rough Whoop-Strain-style 0–21 daily load score, derived from that day's total Garmin/intervals.icu training load — not continuous heart rate, which this repo doesn't have access to, so a true rest day shows 0 here (unlike real Whoop's small non-zero baseline). Hevy strength sessions don't carry a comparable load score yet, so lifting-only days currently show 0 too — a gap, not a sign nothing happened.</div>
+    <canvas id="strainChart" height="60"></canvas>
+  </div>
+
   <!-- Sleep score -->
   <div class="panel span-12">
     <div class="panel-label">Sleep score <span>180d</span></div>
@@ -296,6 +303,20 @@
     <div class="panel-label">Resting HR <span>180d</span></div>
     <div class="chart-caption">Heart rate at rest, typically measured overnight. Lower usually reflects better cardiovascular fitness and recovery.</div>
     <canvas id="rhrChart" height="80"></canvas>
+  </div>
+
+  <!-- Respiration rate -->
+  <div class="panel span-6">
+    <div class="panel-label">Respiration <span>breaths/min, 180d</span></div>
+    <div class="chart-caption">Average overnight breathing rate. A rising trend can precede illness or heavy fatigue before other markers catch up — the same reasoning Whoop/Oura use it for.</div>
+    <canvas id="respirationChart" height="80"></canvas>
+  </div>
+
+  <!-- SpO2 -->
+  <div class="panel span-6">
+    <div class="panel-label">Blood oxygen <span>SpO2 %, 180d</span></div>
+    <div class="chart-caption">Overnight blood oxygen saturation. Sparse by nature — Garmin only records it on nights pulse-ox tracking happens to run.</div>
+    <canvas id="spo2Chart" height="80"></canvas>
   </div>
 
   <!-- Body battery -->
@@ -536,6 +557,8 @@ const TREND_CONFIG = {
   sleep_duration_s: { higherIsBetter: true,  label: 'min',   fmtDelta: d => Math.round(Math.abs(d) / 60) },
   stress_avg:       { higherIsBetter: false, label: 'pts',   fmtDelta: d => Math.round(Math.abs(d)) },
   vo2max_running:   { higherIsBetter: true,  label: '',      fmtDelta: d => Math.abs(d).toFixed(1), sparse: true },
+  avg_respiration:  { higherIsBetter: false, label: 'br/min', fmtDelta: d => Math.abs(d).toFixed(1) },
+  avg_spo2:         { higherIsBetter: true,  label: '%',     fmtDelta: d => Math.abs(d).toFixed(1), sparse: true },
 };
 
 function computeTrend(daily, field) {
@@ -584,6 +607,8 @@ function renderTiles(daily) {
     ['Body battery', fmtBodyBattery(latest.body_battery_min, latest.body_battery_max), '', null],
     ['Stress', latest.stress_avg, '', 'stress_avg'],
     ['VO2 max', mostRecentValue(daily, 'vo2max_running'), 'ml/kg/min', 'vo2max_running'],
+    ['Respiration', mostRecentValue(daily, 'avg_respiration'), 'br/min', 'avg_respiration'],
+    ['Blood oxygen', mostRecentValue(daily, 'avg_spo2'), '%', 'avg_spo2'],
   ];
   document.getElementById('tiles').innerHTML = defs.map(([label, val, unit, field]) => `
     <div class="tile">
@@ -715,6 +740,66 @@ function renderRecoveryChart(daily) {
   });
 }
 
+function computeStrain(dates, activities) {
+  // Real Whoop Strain integrates continuous heart rate all day; this repo
+  // only has per-activity training_load, so it's approximated as a
+  // sqrt-compressed sum of the day's training load — sqrt because Strain
+  // is explicitly non-linear (harder to go from 16->17 than 4->5), and the
+  // constants are tuned so this account's typical easy/moderate/hard days
+  // land roughly where they'd expect on Whoop's scale.
+  const loadByDate = {};
+  activities.forEach(a => {
+    if (a.training_load == null) return;
+    const d = a.start_time_utc.slice(0, 10);
+    loadByDate[d] = (loadByDate[d] || 0) + a.training_load;
+  });
+  return dates.map(d => {
+    const load = loadByDate[d] || 0;
+    return load <= 0 ? 0 : Math.min(21, Math.sqrt(load) * 2.0);
+  });
+}
+
+function strainColor(score) {
+  if (score == null) return '#83868C';
+  return score >= 14 ? '#C1502E' : score >= 7 ? '#C6963C' : '#4C8FBD';
+}
+
+function renderStrainChart(daily, activities) {
+  const dates = daily.map(d => d.date);
+  const scores = computeStrain(dates, activities);
+  const latest = scores.length ? scores[scores.length - 1] : null;
+  const labelEl = document.getElementById('strain-label');
+  if (latest != null) {
+    const zone = latest >= 14 ? 'High' : latest >= 7 ? 'Moderate' : 'Low';
+    labelEl.textContent = `${latest.toFixed(1)} · ${zone} · 180d`;
+  }
+  new Chart(document.getElementById('strainChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Strain',
+        data: scores,
+        borderColor: '#8A8D93',
+        backgroundColor: 'transparent',
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2,
+        segment: { borderColor: ctx => strainColor(scores[ctx.p1DataIndex]) },
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+        y: { min: 0, max: 21, grid: { color: '#2B2E35' } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
 function renderHrvChart(daily) {
   const vals = daily.map(d => d.hrv);
   const trend = rollingAverage(vals, 7);
@@ -752,6 +837,46 @@ function renderRhrChart(daily) {
       responsive: true,
       interaction: { mode: 'index', intersect: false },
       scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { grid: { color: '#2B2E35' } } },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function renderRespirationChart(daily) {
+  const vals = daily.map(d => d.avg_respiration);
+  const trend = rollingAverage(vals, 7);
+  new Chart(document.getElementById('respirationChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'Respiration', data: vals, borderColor: '#B15FB055', backgroundColor: '#B15FB015', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 1, spanGaps: true },
+        { label: '7-day trend', data: trend, borderColor: '#B15FB0', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2.5, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { grid: { color: '#2B2E35' } } },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function renderSpo2Chart(daily) {
+  new Chart(document.getElementById('spo2Chart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'Avg', data: daily.map(d => d.avg_spo2), borderColor: '#4C8FBD', backgroundColor: 'transparent', tension: 0.2, pointRadius: 2, borderWidth: 2, spanGaps: true },
+        { label: 'Lowest', data: daily.map(d => d.lowest_spo2), borderColor: '#C1502E', backgroundColor: 'transparent', tension: 0.2, pointRadius: 2, borderWidth: 1.5, spanGaps: true },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { min: 70, max: 100, grid: { color: '#2B2E35' } } },
       plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
     }
   });
@@ -923,9 +1048,12 @@ function renderOneRMChart(coreLifts) {
   renderTiles(daily);
   renderWeeklyWorkouts(data.weekly_workouts || []);
   renderRecoveryChart(daily);
+  renderStrainChart(daily, data.activities || []);
   renderSleepChart(daily);
   renderHrvChart(daily);
   renderRhrChart(daily);
+  renderRespirationChart(daily);
+  renderSpo2Chart(daily);
   renderBatteryChart(daily);
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);

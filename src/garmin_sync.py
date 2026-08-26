@@ -71,6 +71,9 @@ WELLNESS_SOURCES: dict[str, dict[str, str]] = {
         "stress_avg": "__average_stress_level",
         "body_battery_max": "__body_battery_highest",
         "body_battery_min": "__body_battery_lowest",
+        "avg_respiration": "__avg_waking_respiration",
+        "avg_spo2": "__average_spo2",  # sparse — only nights with pulse-ox enabled
+        "lowest_spo2": "__lowest_spo2",
     },
     "heart_rate.json": {
         "avg_hr": "__avg_hr",
@@ -220,8 +223,8 @@ def sync_to_db() -> tuple[int, int]:
                 INSERT INTO daily_metrics (
                     date, resting_hr, avg_hr, hrv, sleep_score, sleep_duration_s,
                     body_battery_max, body_battery_min, steps, stress_avg,
-                    vo2max_running, weight_kg
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    vo2max_running, weight_kg, avg_respiration, avg_spo2, lowest_spo2
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(date) DO UPDATE SET
                     resting_hr = excluded.resting_hr,
                     avg_hr = excluded.avg_hr,
@@ -234,6 +237,9 @@ def sync_to_db() -> tuple[int, int]:
                     stress_avg = excluded.stress_avg,
                     vo2max_running = excluded.vo2max_running,
                     weight_kg = COALESCE(excluded.weight_kg, daily_metrics.weight_kg),
+                    avg_respiration = excluded.avg_respiration,
+                    avg_spo2 = excluded.avg_spo2,
+                    lowest_spo2 = excluded.lowest_spo2,
                     updated_at = datetime('now')
                 """,
                 (
@@ -242,6 +248,7 @@ def sync_to_db() -> tuple[int, int]:
                     w.get("body_battery_max"), w.get("body_battery_min"),
                     w.get("steps"), w.get("stress_avg"),
                     w.get("vo2max_running"), w.get("weight_kg"),
+                    w.get("avg_respiration"), w.get("avg_spo2"), w.get("lowest_spo2"),
                 ),
             )
 
