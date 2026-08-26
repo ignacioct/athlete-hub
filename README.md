@@ -10,7 +10,7 @@ a lightweight dashboard.
 | Source | Reality | What this repo does |
 |---|---|---|
 | Garmin Connect | No personal API exists. Garmin only grants API access to approved companies. Every "Garmin API" you'll find (including the one this repo wraps) is unofficial and can break when Garmin changes something. | `src/garmin_sync.py` wraps [`garmin-givemydata`](https://github.com/nrvim/garmin-givemydata), the current best-maintained unofficial exporter, and normalizes its output into our schema. |
-| TrainingPeaks | Personal API access isn't available — TrainingPeaks only approves commercial partners. | Not integrated directly. Your club's uploads already sync into Garmin Connect, so they arrive via the Garmin sync for free. |
+| TrainingPeaks | Personal API access isn't available — TrainingPeaks only approves commercial partners. | Not integrated directly. Your club's uploads already sync into Garmin Connect, so completed workouts arrive via the regular Garmin sync for free. *Planned* future workouts from the club's plan are a separate story — see `fetch_future_workout_schedule()` in "What's genuinely fragile here" below. |
 | Hevy | Has a real, documented, official API (Pro subscription required). | `src/hevy_sync.py` calls it directly over HTTPS. This is the most reliable sync in the repo. |
 | intervals.icu | Free account, full official REST API, and it already has a mature, reliable two-way Garmin sync — including pushing planned/structured workouts to your watch. | Used for two jobs: (1) a second read of your running data with training-load metrics (CTL/ATL/TSB) already computed, and (2) the **write path** — this repo creates workouts here, and intervals.icu's existing Garmin sync gets them onto your Forerunner. We deliberately don't try to write to Garmin directly; that path is far less reliable. |
 
@@ -126,6 +126,16 @@ exposing your health data to the internet:
 - Garmin sync: unofficial, can break on Garmin's schedule, and running it
   from a cloud IP (e.g. GitHub Actions) is more likely to get blocked than a
   home connection — see `garmin-givemydata`'s own notes on this.
+- `garmin_sync.fetch_future_workout_schedule()` (powers the "this week's
+  workouts" panel's view into your club's TrainingPeaks -> Garmin plan): the
+  most fragile thing in this repo. `garmin-givemydata`'s own CLI can't fetch
+  future-dated anything (every fetch mode hardcodes `end_date=today`), so
+  this reaches into `garmin_client.GarminClient`'s *private*
+  `_fetch_batch()` method — underscore-prefixed, not a public API — to run
+  one extra GraphQL query with a future end date. It's wrapped so a failure
+  here never breaks the rest of the sync, but if `garmin_client`'s internals
+  change, this specific feature silently stops working until someone
+  updates it.
 - Hevy and intervals.icu syncs: both official APIs, much more stable.
 
 ## Future work

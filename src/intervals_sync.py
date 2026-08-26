@@ -68,6 +68,54 @@ def fetch_wellness(oldest: str, newest: str) -> list[dict]:
     return resp.json()
 
 
+def fetch_planned_workouts(oldest: str, newest: str) -> list[dict]:
+    """WORKOUT-category events only — same /events endpoint races use, but
+    filtered client-side since the API doesn't take a category param."""
+    resp = requests.get(
+        f"{BASE_URL}/athlete/{_athlete_id()}/events",
+        auth=_auth(),
+        params={"oldest": oldest, "newest": newest},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return [e for e in resp.json() if e.get("category") == "WORKOUT"]
+
+
+def pull_planned_workouts_to_db(weeks_ahead: int = 2) -> int:
+    """Pulls create_workout-authored events into planned_workouts (source='intervals')."""
+    init_db()
+    oldest = date.today().isoformat()
+    newest = (date.today() + timedelta(weeks=weeks_ahead)).isoformat()
+    workouts = fetch_planned_workouts(oldest, newest)
+
+    with get_conn() as conn:
+        for w in workouts:
+            d = (w.get("start_date_local") or "")[:10]
+            if not d:
+                continue
+            conn.execute(
+                """
+                INSERT INTO planned_workouts (id, source, name, date, sport, description, raw_json)
+                VALUES (?, 'intervals', ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    name = excluded.name,
+                    sport = excluded.sport,
+                    description = excluded.description,
+                    raw_json = excluded.raw_json,
+                    updated_at = datetime('now')
+                """,
+                (
+                    f"intervals:{w['id']}",
+                    w.get("name"),
+                    d,
+                    w.get("type"),
+                    w.get("description"),
+                    json.dumps(w),
+                ),
+            )
+    return len(workouts)
+
+
 def pull_to_db(days_back: int = 90) -> tuple[int, int]:
     init_db()
     oldest = (date.today() - timedelta(days=days_back)).isoformat()
@@ -75,6 +123,11 @@ def pull_to_db(days_back: int = 90) -> tuple[int, int]:
 
     activities = fetch_activities(oldest, newest)
     wellness = fetch_wellness(oldest, newest)
+
+    try:
+        pull_planned_workouts_to_db()
+    except Exception as e:
+        print(f"Warning: planned workouts sync failed, skipping: {e}")
 
     with get_conn() as conn:
         for a in activities:

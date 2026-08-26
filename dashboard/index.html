@@ -137,6 +137,31 @@
   .badge-B { background: var(--run-dim); color: var(--run); }
   .badge-C { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
 
+  /* --- this week's workouts --- */
+  .workout-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .workout-row:last-child { border-bottom: none; }
+  .workout-day {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 84px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .workout-name { font-weight: 500; font-size: 14px; }
+  .workout-detail { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .badge-done { background: var(--good); color: #17181C; }
+  .badge-missed { background: var(--alert); color: #17181C; }
+  .badge-today { background: var(--run-dim); color: var(--run); }
+  .badge-upcoming { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
+  .badge-rest { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
+
   .empty { color: var(--text-dim); font-size: 13px; padding: 12px 4px; }
 
   canvas { max-width: 100%; }
@@ -190,6 +215,12 @@
   <div class="panel span-12">
     <div class="panel-label">Today <span id="tiles-date"></span></div>
     <div class="tiles" id="tiles"></div>
+  </div>
+
+  <!-- This week's workouts -->
+  <div class="panel span-12">
+    <div class="panel-label">This week's workouts <span>planned vs. actual</span></div>
+    <div id="weekly-workouts"></div>
   </div>
 
   <!-- Training load -->
@@ -289,6 +320,58 @@ function renderRaces(races) {
       <div class="race-days">${daysBetween(today, r.date)}<span class="unit">days</span></div>
     </div>
   `).join('');
+}
+
+function fmtMin(seconds) {
+  return seconds == null ? null : Math.round(seconds / 60) + 'min';
+}
+
+function fmtKm(meters) {
+  return meters == null ? null : (meters / 1000).toFixed(1) + 'km';
+}
+
+function fmtPace(secPerKm) {
+  if (secPerKm == null) return null;
+  const m = Math.floor(secPerKm / 60);
+  const s = Math.round(secPerKm % 60);
+  return `${m}:${s.toString().padStart(2, '0')}/km`;
+}
+
+const WORKOUT_STATUS_LABELS = { done: 'Done', missed: 'Missed', today: 'Today', upcoming: 'Upcoming', rest: 'Rest' };
+
+function renderWeeklyWorkouts(workouts) {
+  const el = document.getElementById('weekly-workouts');
+  if (!workouts || workouts.length === 0) {
+    el.innerHTML = '<div class="empty">No planned workouts this week.</div>';
+    return;
+  }
+  el.innerHTML = workouts.map(w => {
+    const dayName = new Date(w.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    let detail;
+    if (w.status === 'rest') {
+      detail = 'Rest day';
+    } else {
+      const plannedText = fmtMin(w.estimated_duration_s) ? `Planned ~${fmtMin(w.estimated_duration_s)}` : 'Planned';
+      if (w.actual) {
+        const bits = [fmtKm(w.actual.distance_m), fmtMin(w.actual.duration_s), fmtPace(w.actual.avg_pace_s_per_km)].filter(Boolean);
+        detail = `${plannedText} · Actual: ${bits.join(', ') || '—'}`;
+      } else {
+        detail = plannedText;
+      }
+    }
+
+    return `
+      <div class="workout-row">
+        <div class="workout-day">${dayName}</div>
+        <div>
+          <span class="badge badge-${w.status}">${WORKOUT_STATUS_LABELS[w.status] || w.status}</span>
+          <span class="workout-name">${w.name || w.sport || 'Workout'}</span>
+          <div class="workout-detail">${detail}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderTiles(daily) {
@@ -442,6 +525,7 @@ function renderStrengthChart(sets) {
 
   renderRaces(data.races || []);
   renderTiles(daily);
+  renderWeeklyWorkouts(data.weekly_workouts || []);
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);
   renderSleepChart(daily);

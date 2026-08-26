@@ -9,6 +9,7 @@ Add to Claude Desktop / Claude Code config (see mcp_server/README.md).
 """
 
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -135,6 +136,67 @@ def get_strength_sets(exercise: str | None = None, start_date: str | None = None
     with get_conn() as conn:
         rows = conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
+
+
+@mcp.tool()
+def get_weekly_workouts() -> list[dict]:
+    """
+    Get this week's (Monday-Sunday) planned workouts, each matched against a
+    same-day completed activity if one exists.
+
+    Planned workouts come from two sources: your running club's
+    TrainingPeaks -> Garmin schedule (source='garmin_club'), and anything
+    created here via create_workout (source='intervals'). Each item has a
+    status: 'done' (matched to a completed activity), 'missed' (date has
+    passed with nothing logged), 'today', 'upcoming', or 'rest'. When done,
+    `actual` holds the matched activity's real distance/duration/pace/HR to
+    compare against `estimated_duration_s` (the only numeric target Garmin's
+    schedule reliably provides — plain-text workout descriptions aren't
+    auto-parsed into numeric targets by intervals.icu).
+    """
+    init_db()
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+
+    with get_conn() as conn:
+        planned = [
+            dict(r)
+            for r in conn.execute(
+                """
+                SELECT id, source, name, date, sport, is_rest_day, description, estimated_duration_s
+                FROM planned_workouts
+                WHERE date >= ? AND date <= ?
+                ORDER BY date ASC
+                """,
+                (monday.isoformat(), sunday.isoformat()),
+            ).fetchall()
+        ]
+        for w in planned:
+            match = conn.execute(
+                """
+                SELECT source, name, duration_s, distance_m, avg_hr, avg_pace_s_per_km, training_load
+                FROM activities
+                WHERE date(start_time_utc) = ? AND is_strength_duplicate = 0
+                ORDER BY (source = 'intervals') DESC
+                LIMIT 1
+                """,
+                (w["date"],),
+            ).fetchone()
+            w["actual"] = dict(match) if match else None
+            today_str = today.isoformat()
+            if w["is_rest_day"]:
+                w["status"] = "rest"
+            elif match:
+                w["status"] = "done"
+            elif w["date"] < today_str:
+                w["status"] = "missed"
+            elif w["date"] == today_str:
+                w["status"] = "today"
+            else:
+                w["status"] = "upcoming"
+
+    return planned
 
 
 @mcp.tool()

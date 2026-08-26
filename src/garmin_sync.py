@@ -245,13 +245,126 @@ def sync_to_db() -> tuple[int, int]:
                 ),
             )
 
+        # workout_schedule.json only covers the backward-looking --days window
+        # (see fetch_future_workout_schedule() for why forward dates need a
+        # separate direct-API call), but it's the only way to see *past*
+        # scheduled workouts — e.g. earlier this week — so both matter.
+        for r in _load_json_files("workout_schedule.json"):
+            _upsert_planned_workout(conn, r)
+
     mark_synced("garmin", note=f"{len(activities)} activities, {len(wellness)} wellness days")
     return len(activities), len(wellness)
 
 
+def _upsert_planned_workout(conn, r: dict) -> None:
+    d = r.get("scheduleDate")
+    if not d:
+        return
+    workout_id = r.get("workoutId")
+    conn.execute(
+        """
+        INSERT INTO planned_workouts (
+            id, source, name, date, sport, is_rest_day,
+            estimated_duration_s, raw_json
+        ) VALUES (?, 'garmin_club', ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name,
+            sport = excluded.sport,
+            is_rest_day = excluded.is_rest_day,
+            estimated_duration_s = excluded.estimated_duration_s,
+            raw_json = excluded.raw_json,
+            updated_at = datetime('now')
+        """,
+        (
+            f"garmin_club:{workout_id or d}",
+            r.get("workoutName"),
+            d,
+            r.get("workoutType"),
+            1 if r.get("isRestDay") else 0,
+            r.get("estimatedDurationInSecs"),
+            json.dumps(r),
+        ),
+    )
+
+
+def fetch_future_workout_schedule(weeks_ahead: int = 2) -> list[dict]:
+    """
+    Fetch FUTURE-dated workout_schedule entries — your running club's
+    TrainingPeaks -> Garmin plan — directly via Garmin's private GraphQL
+    endpoint. garmin-givemydata's own CLI can't do this: every one of its
+    fetch modes hardcodes end_date=today (see module docstring), so there's
+    no --days/--since combination that reaches forward in time.
+
+    This is meaningfully more fragile than the rest of this file: it reaches
+    into garmin_client.GarminClient's *private* (underscore-prefixed)
+    _fetch_batch() method — the same mechanism garmin-givemydata's CLI uses
+    internally for GraphQL queries (a real browser fetch() call with a CSRF
+    token, run via Selenium's execute_async_script) — because there's no
+    public API for an arbitrary future-dated query. It reuses the same
+    session cookies the regular sync already established, so it should log
+    in instantly rather than prompting again. If garmin_client's internals
+    change, this breaks silently; that's why every call site wraps it and
+    treats an empty list / exception as "couldn't get it this time" rather
+    than a hard failure.
+    """
+    email = os.environ.get("GARMIN_EMAIL")
+    password = os.environ.get("GARMIN_PASSWORD")
+    if not (email and password):
+        return []
+
+    from garmin_client import GarminClient
+
+    today = date.today()
+    end = today + timedelta(weeks=weeks_ahead)
+    query = (
+        f'query{{workoutScheduleSummariesScalar('
+        f'startDate:"{today.isoformat()}", endDate:"{end.isoformat()}")}}'
+    )
+
+    client = GarminClient(
+        email=email,
+        password=password,
+        profile_dir=Path("browser_profile"),
+        headless=True,
+        session_file=Path("garmin_session.json"),
+    )
+    try:
+        if not client.login():
+            return []
+        result = client._fetch_batch({}, {"future_workout_schedule": query})
+        entry = result.get("gql_future_workout_schedule", {})
+        if entry.get("status") != 200:
+            return []
+        records = entry.get("data", {}).get("data", {}).get("workoutScheduleSummariesScalar")
+        return records if isinstance(records, list) else []
+    finally:
+        client.close()
+
+
+def sync_club_schedule(weeks_ahead: int = 2) -> int:
+    """Pulls the club's future-dated Garmin schedule into planned_workouts. Best-effort — see fetch_future_workout_schedule()."""
+    init_db()
+    try:
+        records = fetch_future_workout_schedule(weeks_ahead)
+    except Exception as e:
+        print(f"Warning: could not fetch future workout schedule: {e}")
+        return 0
+
+    with get_conn() as conn:
+        for r in records:
+            _upsert_planned_workout(conn, r)
+    return len(records)
+
+
 def sync(days_back: int = 90) -> tuple[int, int]:
     run_export(days_back)
-    return sync_to_db()
+    result = sync_to_db()
+    try:
+        n = sync_club_schedule()
+        print(f"  club schedule: {n} planned workouts (next 2 weeks)")
+    except Exception as e:
+        print(f"Warning: club schedule sync failed, skipping: {e}")
+    return result
 
 
 if __name__ == "__main__":

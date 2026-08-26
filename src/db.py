@@ -88,6 +88,19 @@ CREATE TABLE IF NOT EXISTS races (
     created_at      TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS planned_workouts (
+    id              TEXT PRIMARY KEY,      -- "garmin_club:<workoutId>" or "intervals:<event id>"
+    source          TEXT NOT NULL,         -- 'garmin_club' (club's TrainingPeaks->Garmin plan) | 'intervals' (create_workout)
+    name            TEXT,
+    date            TEXT NOT NULL,         -- YYYY-MM-DD
+    sport           TEXT,
+    is_rest_day     INTEGER DEFAULT 0,
+    description     TEXT,                  -- intervals.icu structured-workout text, when present
+    estimated_duration_s INTEGER,          -- Garmin's planned-duration estimate, when present
+    raw_json        TEXT,
+    updated_at      TEXT DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS sync_log (
     source          TEXT PRIMARY KEY,      -- 'garmin' | 'hevy' | 'intervals'
     last_synced_at  TEXT,
@@ -98,6 +111,7 @@ CREATE TABLE IF NOT EXISTS sync_log (
 CREATE INDEX IF NOT EXISTS idx_activities_start ON activities(start_time_utc);
 CREATE INDEX IF NOT EXISTS idx_activities_sport ON activities(sport);
 CREATE INDEX IF NOT EXISTS idx_sets_session ON strength_sets(session_id);
+CREATE INDEX IF NOT EXISTS idx_planned_workouts_date ON planned_workouts(date);
 CREATE INDEX IF NOT EXISTS idx_sets_exercise ON strength_sets(exercise);
 """
 
