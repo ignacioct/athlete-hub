@@ -82,6 +82,10 @@ WELLNESS_SOURCES: dict[str, dict[str, str]] = {
     "sleep.json": {
         "sleep_score": "__sleep_score_overall",
         "sleep_duration_s": "__sleep_time_seconds",
+        "deep_sleep_s": "__deep_sleep_seconds",
+        "light_sleep_s": "__light_sleep_seconds",
+        "rem_sleep_s": "__rem_sleep_seconds",
+        "awake_s": "__awake_sleep_seconds",
     },
     "hrv.json": {
         "hrv": "__last_night_avg",
@@ -223,8 +227,9 @@ def sync_to_db() -> tuple[int, int]:
                 INSERT INTO daily_metrics (
                     date, resting_hr, avg_hr, hrv, sleep_score, sleep_duration_s,
                     body_battery_max, body_battery_min, steps, stress_avg,
-                    vo2max_running, weight_kg, avg_respiration, avg_spo2, lowest_spo2
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    vo2max_running, weight_kg, avg_respiration, avg_spo2, lowest_spo2,
+                    deep_sleep_s, light_sleep_s, rem_sleep_s, awake_s
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(date) DO UPDATE SET
                     resting_hr = excluded.resting_hr,
                     avg_hr = excluded.avg_hr,
@@ -240,6 +245,10 @@ def sync_to_db() -> tuple[int, int]:
                     avg_respiration = excluded.avg_respiration,
                     avg_spo2 = excluded.avg_spo2,
                     lowest_spo2 = excluded.lowest_spo2,
+                    deep_sleep_s = excluded.deep_sleep_s,
+                    light_sleep_s = excluded.light_sleep_s,
+                    rem_sleep_s = excluded.rem_sleep_s,
+                    awake_s = excluded.awake_s,
                     updated_at = datetime('now')
                 """,
                 (
@@ -249,6 +258,8 @@ def sync_to_db() -> tuple[int, int]:
                     w.get("steps"), w.get("stress_avg"),
                     w.get("vo2max_running"), w.get("weight_kg"),
                     w.get("avg_respiration"), w.get("avg_spo2"), w.get("lowest_spo2"),
+                    w.get("deep_sleep_s"), w.get("light_sleep_s"),
+                    w.get("rem_sleep_s"), w.get("awake_s"),
                 ),
             )
 

@@ -78,6 +78,10 @@ CREATE TABLE IF NOT EXISTS daily_metrics (
     avg_respiration REAL,                  -- breaths/min, overnight average (Garmin)
     avg_spo2        REAL,                  -- blood oxygen %, overnight average — sparse, only nights with pulse-ox enabled
     lowest_spo2     REAL,
+    deep_sleep_s    INTEGER,
+    light_sleep_s   INTEGER,
+    rem_sleep_s     INTEGER,
+    awake_s         INTEGER,               -- time awake during the sleep window, not total waking hours
     updated_at      TEXT DEFAULT (datetime('now'))
 );
 
@@ -151,6 +155,10 @@ _MIGRATIONS = [
     ("daily_metrics", "avg_respiration", "REAL"),
     ("daily_metrics", "avg_spo2", "REAL"),
     ("daily_metrics", "lowest_spo2", "REAL"),
+    ("daily_metrics", "deep_sleep_s", "INTEGER"),
+    ("daily_metrics", "light_sleep_s", "INTEGER"),
+    ("daily_metrics", "rem_sleep_s", "INTEGER"),
+    ("daily_metrics", "awake_s", "INTEGER"),
 ]
 
 

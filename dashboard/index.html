@@ -291,6 +291,13 @@
     <canvas id="sleepChart" height="60"></canvas>
   </div>
 
+  <!-- Sleep stages -->
+  <div class="panel span-12">
+    <div class="panel-label">Sleep stages <span>hours, 60d</span></div>
+    <div class="chart-caption">Time in each sleep stage per night — the same breakdown Whoop/Oura lead with. Deep and REM are generally the stages that matter most for physical and mental recovery, respectively.</div>
+    <canvas id="sleepStagesChart" height="70"></canvas>
+  </div>
+
   <!-- HRV -->
   <div class="panel span-6">
     <div class="panel-label">HRV <span>180d</span></div>
@@ -667,6 +674,34 @@ function renderSleepChart(daily) {
       scales: {
         x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
         y: { min: 0, max: 100, grid: { color: '#2B2E35' } }
+      },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function renderSleepStagesChart(daily) {
+  // Stacked bars get unreadable at 180 days of density; a 60-day window is
+  // still plenty to see stage-composition trends.
+  const recent = daily.slice(-60);
+  const toHours = s => s == null ? null : Math.round((s / 3600) * 10) / 10;
+  new Chart(document.getElementById('sleepStagesChart'), {
+    type: 'bar',
+    data: {
+      labels: recent.map(d => d.date),
+      datasets: [
+        { label: 'Deep', data: recent.map(d => toHours(d.deep_sleep_s)), backgroundColor: '#4C8FBD' },
+        { label: 'REM', data: recent.map(d => toHours(d.rem_sleep_s)), backgroundColor: '#B15FB0' },
+        { label: 'Light', data: recent.map(d => toHours(d.light_sleep_s)), backgroundColor: '#6FA46A' },
+        { label: 'Awake', data: recent.map(d => toHours(d.awake_s)), backgroundColor: '#83868C' },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+        y: { stacked: true, grid: { color: '#2B2E35' }, title: { display: true, text: 'hours', color: '#83868C' } }
       },
       plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
     }
@@ -1050,6 +1085,7 @@ function renderOneRMChart(coreLifts) {
   renderRecoveryChart(daily);
   renderStrainChart(daily, data.activities || []);
   renderSleepChart(daily);
+  renderSleepStagesChart(daily);
   renderHrvChart(daily);
   renderRhrChart(daily);
   renderRespirationChart(daily);
