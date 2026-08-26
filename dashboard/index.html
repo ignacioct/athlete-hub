@@ -105,7 +105,7 @@
   .dial-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .dial-value { font-family: 'IBM Plex Mono', monospace; font-size: 34px; font-weight: 600; margin-top: -8px; }
   .dial-caption { font-size: 12px; color: var(--text-dim); text-align: center; max-width: 220px; }
-  .recovery-caption { font-size: 12px; color: var(--text-dim); margin: -8px 0 14px; }
+  .chart-caption { font-size: 12px; color: var(--text-dim); margin: -8px 0 14px; }
 
   /* --- stat tiles --- */
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -246,31 +246,35 @@
   <!-- Recovery score -->
   <div class="panel span-12">
     <div class="panel-label">Recovery <span id="recovery-label">180d</span></div>
-    <div class="recovery-caption">Approximate, not Whoop's algorithm: 40% HRV vs. 30-day baseline + 30% resting HR vs. baseline (lower is better) + 30% sleep score.</div>
+    <div class="chart-caption">Approximate, not Whoop's algorithm: 40% HRV vs. 30-day baseline + 30% resting HR vs. baseline (lower is better) + 30% sleep score.</div>
     <canvas id="recoveryChart" height="60"></canvas>
   </div>
 
   <!-- Sleep score -->
   <div class="panel span-12">
     <div class="panel-label">Sleep score <span>180d</span></div>
+    <div class="chart-caption">Garmin's 0–100 sleep quality score, combining duration, sleep stages, and restlessness overnight.</div>
     <canvas id="sleepChart" height="60"></canvas>
   </div>
 
   <!-- HRV -->
   <div class="panel span-6">
     <div class="panel-label">HRV <span>180d</span></div>
+    <div class="chart-caption">Heart rate variability — the variation in time between heartbeats, measured overnight. Higher generally means a more relaxed, recovered nervous system.</div>
     <canvas id="hrvChart" height="80"></canvas>
   </div>
 
   <!-- Resting HR -->
   <div class="panel span-6">
     <div class="panel-label">Resting HR <span>180d</span></div>
+    <div class="chart-caption">Heart rate at rest, typically measured overnight. Lower usually reflects better cardiovascular fitness and recovery.</div>
     <canvas id="rhrChart" height="80"></canvas>
   </div>
 
   <!-- Body battery -->
   <div class="panel span-12">
     <div class="panel-label">Body battery <span>daily range, 180d</span></div>
+    <div class="chart-caption">Garmin's 0–100 energy-reserve estimate — drained by activity and stress, recharged by rest and sleep. Band shows the day's low to high.</div>
     <canvas id="batteryChart" height="70"></canvas>
   </div>
 
@@ -292,18 +296,21 @@
   <!-- Training load -->
   <div class="panel span-7">
     <div class="panel-label">Training load <span>CTL / ATL, 180d</span></div>
+    <div class="chart-caption">CTL (fitness): a ~6-week rolling average of training load — higher means more built-up endurance. ATL (fatigue): a ~1-week average — higher means more short-term fatigue. Their difference is the Readiness dial above.</div>
     <canvas id="loadChart" height="90"></canvas>
   </div>
 
   <!-- Weekly running volume -->
   <div class="panel span-5">
     <div class="panel-label">Weekly running volume <span>km</span></div>
+    <div class="chart-caption">Total running distance per calendar week (Mon–Sun).</div>
     <canvas id="volumeChart" height="110"></canvas>
   </div>
 
   <!-- VO2 max -->
   <div class="panel span-12">
     <div class="panel-label">VO2 max <span>running, 365d</span></div>
+    <div class="chart-caption">Garmin's estimate of the maximum oxygen your body can use during exercise — a standard aerobic fitness marker. Higher is better; it updates every few runs, not daily.</div>
     <canvas id="vo2Chart" height="60"></canvas>
   </div>
 
@@ -313,6 +320,7 @@
   <!-- Strength progress -->
   <div class="panel span-12">
     <div class="panel-label">Strength progress <span>top lifts, session max weight</span></div>
+    <div class="chart-caption">Heaviest working weight per session for your 4 most-logged exercises — a simple strength-progression signal, not 1RM.</div>
     <div id="strength-empty"></div>
     <canvas id="strengthChart" height="70"></canvas>
   </div>
