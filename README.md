@@ -24,23 +24,28 @@ work without touching Garmin's unofficial write endpoints at all.
 ```
 athlete-hub/
 ├── src/
-│   ├── db.py              # SQLite schema + connection helper
-│   ├── garmin_sync.py     # Garmin -> unified DB (via garmin-givemydata)
-│   ├── hevy_sync.py       # Hevy -> unified DB
-│   ├── intervals_sync.py  # intervals.icu -> unified DB, and DB -> intervals.icu (workout push)
-│   └── races.py           # CRUD for upcoming races
+│   ├── db.py                # SQLite schema + connection helper
+│   ├── garmin_sync.py       # Garmin -> unified DB (via garmin-givemydata)
+│   ├── hevy_sync.py         # Hevy -> unified DB (via hevy-unofficial)
+│   ├── intervals_sync.py    # intervals.icu -> unified DB, and DB -> intervals.icu (workout push)
+│   ├── races.py             # CRUD for upcoming races
+│   ├── weekly_workouts.py   # planned-vs-actual view of the current week (shared: dashboard + MCP)
+│   └── strength_progress.py # PPL split status, estimated 1RM history, recent PRs (shared: dashboard + MCP)
 ├── mcp_server/
-│   └── server.py          # MCP server: exposes the DB + workout creation to Claude
+│   ├── server.py           # MCP server: exposes the DB + workout creation to Claude
+│   └── README.md           # how to connect it to Claude Desktop / Claude Code
 ├── scripts/
-│   └── sync_all.py        # run every sync in order
+│   ├── sync_all.py         # run every sync in order
+│   ├── seed_races.py       # one-time bulk import from config/races.yaml
+│   └── hevy_login.py       # one-time manual token capture for Hevy (see its docstring)
 ├── dashboard/
-│   ├── generate_data.py   # DB -> data.json snapshot
-│   ├── server.py          # serves the dashboard + POST /api/sync ("Sync now" button)
-│   ├── index.html         # Chart.js dashboard reading data.json
-│   └── vendor/             # self-hosted Chart.js (no CDN dependency)
+│   ├── generate_data.py    # DB -> data.json snapshot
+│   ├── server.py           # serves the dashboard + POST /api/sync ("Sync now" button)
+│   ├── index.html          # Chart.js dashboard reading data.json
+│   └── vendor/              # self-hosted Chart.js (no CDN dependency)
 ├── config/
-│   └── races.yaml         # example seed file for races.py
-└── data/                  # athlete.db lives here (gitignored)
+│   └── races.yaml          # example seed file for races.py
+└── data/                   # athlete.db lives here (gitignored)
 ```
 
 ## Setup
@@ -148,7 +153,12 @@ exposing your health data to the internet:
   fully manual flow (log in normally in your own browser, copy one cookie
   value) that Google has no reason to block. `/user_workouts_paged` also
   silently 400s if `limit` is set above 5 — undocumented, found by testing;
-  `PAGE_SIZE = 5` in `hevy_sync.py` is not arbitrary.
+  `PAGE_SIZE = 5` in `hevy_sync.py` is not arbitrary. If this dependency
+  ever breaks and doesn't get fixed upstream, the fallback is a CSV
+  importer against Hevy's free-tier "Export Data" feature instead —
+  different shape (manual/periodic export instead of a live API pull, so
+  `sync_all.py`/`sync_now` couldn't trigger it automatically), but zero
+  reverse-engineering risk.
 - intervals.icu sync: official API, stable.
 
 ## Future work
@@ -159,10 +169,3 @@ exposing your health data to the internet:
   sizing pass, no thought given to what matters most on a small screen.
   Reachability from a phone is already solved (see "Phone access" above);
   what's missing is the UX itself.
-- **Hevy sync is live** (via `hevy-unofficial`, not the Pro-gated official
-  API — see "What's genuinely fragile here" for the real tradeoffs of that
-  choice). If it ever breaks and doesn't get fixed upstream, the fallback
-  is a CSV importer against Hevy's free-tier "Export Data" feature —
-  different shape (manual/periodic export instead of a live API pull, so
-  `sync_all.py`/`sync_now` couldn't trigger it automatically), but zero
-  reverse-engineering risk.

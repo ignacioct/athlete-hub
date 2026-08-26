@@ -1,11 +1,13 @@
 """
 Unified SQLite schema for athlete-hub.
 
-One database, four kinds of data:
+One database, five kinds of data:
   - activities: any logged session (run, ride, strength-tagged Garmin entry, etc.)
   - strength_sets: per-set detail for strength sessions, from Hevy
   - daily_metrics: one row per calendar day (HR, sleep, body battery, HRV, steps...)
   - races: upcoming events you want Claude to plan around
+  - planned_workouts: this week's plan — the club's Garmin schedule and
+    anything created via create_workout — matched against actual activities
 """
 
 import os
