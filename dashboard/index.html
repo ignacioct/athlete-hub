@@ -423,6 +423,20 @@ function renderWeeklyWorkouts(workouts) {
   }).join('');
 }
 
+function fmtHoursMin(seconds) {
+  if (seconds == null) return null;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.round((seconds % 3600) / 60);
+  return `${h}h ${m.toString().padStart(2, '0')}m`;
+}
+
+function fmtBodyBattery(min, max) {
+  if (min == null && max == null) return null;
+  if (min == null) return `${Math.round(max)}`;
+  if (max == null) return `${Math.round(min)}`;
+  return `${Math.round(min)}–${Math.round(max)}`;
+}
+
 function renderTiles(daily) {
   const latest = daily.length ? daily[daily.length - 1] : {};
   document.getElementById('tiles-date').textContent = latest.date || '';
@@ -431,6 +445,10 @@ function renderTiles(daily) {
     ['HRV', latest.hrv, 'ms'],
     ['Sleep score', latest.sleep_score, ''],
     ['Steps', latest.steps, ''],
+    ['Sleep duration', fmtHoursMin(latest.sleep_duration_s), ''],
+    ['Body battery', fmtBodyBattery(latest.body_battery_min, latest.body_battery_max), ''],
+    ['Stress', latest.stress_avg, ''],
+    ['VO2 max', latest.vo2max_running, 'ml/kg/min'],
   ];
   document.getElementById('tiles').innerHTML = defs.map(([label, val, unit]) => `
     <div class="tile">
