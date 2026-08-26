@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """
-Runs every sync in order. Safe to schedule via cron/launchd/systemd:
+Runs every sync in order. On-demand, not cron-scheduled — the sync machine
+isn't guaranteed to be on, so this is triggered instead by the dashboard's
+"Sync now" button (dashboard/server.py's POST /api/sync) or by asking Claude
+to sync (mcp_server/server.py's sync_now tool). Both call main() below.
 
-    0 6,20 * * * cd /path/to/athlete-hub && .venv/bin/python scripts/sync_all.py >> sync.log 2>&1
+    python scripts/sync_all.py --days 7
+
+--days controls the Garmin/intervals.icu lookback window. Garmin's sync logs
+in via Selenium on every run, so a routine sync should use a short window (7
+days is plenty of overlap) rather than the 90-day default meant for
+first-time/manual backfills.
 """
 
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -15,14 +24,14 @@ from dashboard import generate_data  # noqa: E402
 from src import garmin_sync, hevy_sync, intervals_sync  # noqa: E402
 
 
-def main() -> None:
+def main(days_back: int = 90) -> dict:
     started = time.time()
     results = {}
 
     for label, fn in [
         ("hevy", hevy_sync.sync),
-        ("intervals.icu", intervals_sync.pull_to_db),
-        ("garmin", garmin_sync.sync),
+        ("intervals.icu", lambda: intervals_sync.pull_to_db(days_back)),
+        ("garmin", lambda: garmin_sync.sync(days_back)),
     ]:
         print(f"--- syncing {label} ---")
         try:
@@ -40,7 +49,11 @@ def main() -> None:
 
     print(f"\nDone in {time.time() - started:.1f}s")
     print(results)
+    return results
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--days", type=int, default=90, help="lookback window for Garmin/intervals.icu (default 90; use a small window for routine cron runs)")
+    args = parser.parse_args()
+    main(args.days)

@@ -140,13 +140,32 @@
   .empty { color: var(--text-dim); font-size: 13px; padding: 12px 4px; }
 
   canvas { max-width: 100%; }
+
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .sync-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  .sync-btn:hover:not(:disabled) { border-color: var(--run); color: var(--run); }
+  .sync-btn:disabled { opacity: 0.6; cursor: default; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>athlete-hub <span>/ training console</span></h1>
-  <div class="meta" id="generated-at">— loading —</div>
+  <div class="header-right">
+    <div class="meta" id="generated-at">— loading —</div>
+    <button class="sync-btn" id="sync-btn">Sync now</button>
+  </div>
 </header>
 
 <div class="grid">
@@ -389,6 +408,27 @@ function renderStrengthChart(sets) {
   renderVolumeChart(data.activities || []);
   renderStrengthChart(data.strength_sets || []);
 })();
+
+document.getElementById('sync-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('sync-btn');
+  btn.disabled = true;
+  btn.textContent = 'Syncing…';
+  try {
+    const res = await fetch('/api/sync', { method: 'POST' });
+    const result = await res.json();
+    if (result.ok) {
+      btn.textContent = 'Synced ✓';
+      location.reload();
+      return;
+    }
+    console.error('sync failed:', result.output);
+    btn.textContent = 'Sync failed';
+  } catch (e) {
+    console.error('sync request failed:', e);
+    btn.textContent = 'Sync failed (server running?)';
+  }
+  setTimeout(() => { btn.disabled = false; btn.textContent = 'Sync now'; }, 4000);
+});
 </script>
 
 </body>

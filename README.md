@@ -35,7 +35,9 @@ athlete-hub/
 │   └── sync_all.py        # run every sync in order
 ├── dashboard/
 │   ├── generate_data.py   # DB -> data.json snapshot
-│   └── index.html         # static Chart.js dashboard reading data.json
+│   ├── server.py          # serves the dashboard + POST /api/sync ("Sync now" button)
+│   ├── index.html         # Chart.js dashboard reading data.json
+│   └── vendor/             # self-hosted Chart.js (no CDN dependency)
 ├── config/
 │   └── races.yaml         # example seed file for races.py
 └── data/                  # athlete.db lives here (gitignored)
@@ -74,23 +76,36 @@ athlete-hub/
    confirm (or fix) the field mapping in `GARMIN_FIELD_MAP` near the top of
    the file before the real sync runs.
 
-6. **View the dashboard.** Browsers block `fetch()` on files opened directly
-   (`file://`), so serve it:
+6. **View the dashboard:**
    ```bash
-   python dashboard/generate_data.py   # writes dashboard/data.json
-   cd dashboard && python -m http.server 8080
+   python dashboard/server.py 8080
    # open http://localhost:8080
    ```
-   `scripts/sync_all.py` already regenerates `data.json` after every sync.
+   This serves the static dashboard *and* a "Sync now" button in the header —
+   there's no cron job (see below for why), so this is the primary way data
+   gets refreshed.
 
 7. **Add the MCP server to Claude Desktop / Claude Code** — see
-   `mcp_server/README.md` for the config snippet.
+   `mcp_server/README.md` for the config snippet. Once connected, you can
+   also just ask Claude to sync (it calls the `sync_now` tool).
 
-8. **Schedule it.** A cron job (or launchd/systemd timer) calling
-   `scripts/sync_all.py` once or twice a day keeps everything current:
-   ```
-   0 6,20 * * * cd /path/to/athlete-hub && .venv/bin/python scripts/sync_all.py >> sync.log 2>&1
-   ```
+## Why there's no cron job
+
+The original design scheduled `scripts/sync_all.py` via cron. In practice the
+sync machine isn't guaranteed to be on 24/7, so a cron job would silently
+miss runs. Instead, syncing is on-demand from two places that both just call
+`scripts/sync_all.py`'s `main()`:
+
+- **The dashboard's "Sync now" button** (`dashboard/server.py`'s
+  `POST /api/sync`) — click it whenever you're looking at the dashboard.
+- **Asking Claude to sync** (`mcp_server/server.py`'s `sync_now` tool) — works
+  from any Claude session with the MCP server configured.
+
+Both default to a 7-day lookback (`garmin-givemydata`'s export always dumps
+its full accumulated local history regardless of `--days`, so `athlete.db`
+still ends up complete — the short window just keeps each sync's Garmin
+login/fetch step fast). Run `python scripts/sync_all.py --days 90` manually
+for a first-time backfill or if you've gone a while between syncs.
 
 ## Phone access
 

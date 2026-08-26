@@ -15,11 +15,31 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from mcp.server.mcpserver import MCPServer
 
+from scripts.sync_all import main as run_sync_all
 from src.db import get_conn, init_db
 from src.intervals_sync import push_workout
 from src.races import add_race, list_races, update_race_status
 
 mcp = MCPServer("athlete-hub")
+
+
+@mcp.tool()
+def sync_now(days_back: int = 7) -> dict:
+    """
+    Pull fresh data from Garmin, Hevy (if configured), and intervals.icu into
+    the local DB, then regenerate the dashboard snapshot. There's no cron job
+    behind this repo — the sync machine isn't guaranteed to be on — so this
+    tool (and the dashboard's "Sync now" button) is how syncs actually happen.
+
+    Takes roughly 30-60s: Garmin's sync logs in via Selenium every time.
+    days_back is the lookback window for Garmin/intervals.icu (default 7,
+    plenty of overlap for routine use — only raise it for a backfill).
+
+    Returns a dict of {source: result} — a per-source activity/day count on
+    success, or "FAILED: <reason>" if that one source errored (other sources
+    still sync; this never raises for a single-source failure).
+    """
+    return run_sync_all(days_back)
 
 
 @mcp.tool()
