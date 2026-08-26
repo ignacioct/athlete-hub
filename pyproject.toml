@@ -9,6 +9,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "mcp>=1.2.0",
     "garmin-givemydata @ git+https://github.com/nrvim/garmin-givemydata.git",
+    "hevy-unofficial>=0.0.2a0",
 ]
 
 [tool.uv]
