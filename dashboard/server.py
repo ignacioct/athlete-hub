@@ -7,7 +7,7 @@ actually looking at the dashboard (or ask Claude, via the MCP server's
 sync_now tool) rather than on a schedule.
 
 Run:
-    python dashboard/server.py [port]   # defaults to 8080
+    uv run dashboard/server.py [port]   # defaults to 8080
 """
 
 import http.server

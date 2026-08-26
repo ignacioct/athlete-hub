@@ -30,6 +30,14 @@ def main(days_back: int = 180) -> None:
                        avg_hr, training_load
                 FROM activities
                 WHERE start_time_utc >= ? AND is_strength_duplicate = 0
+                  AND NOT (
+                      source = 'garmin'
+                      AND EXISTS (
+                          SELECT 1 FROM activities a2
+                          WHERE a2.source = 'intervals'
+                            AND ABS(strftime('%s', a2.start_time_utc) - strftime('%s', activities.start_time_utc)) < 600
+                      )
+                  )
                 ORDER BY start_time_utc ASC
                 """,
                 (oldest,),

@@ -9,16 +9,18 @@ Claude Code):
 {
   "mcpServers": {
     "athlete-hub": {
-      "command": "/absolute/path/to/athlete-hub/.venv/bin/python",
-      "args": ["/absolute/path/to/athlete-hub/mcp_server/server.py"]
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/athlete-hub", "mcp_server/server.py"]
     }
   }
 }
 ```
 
-No `env` block needed — `.env` is found automatically (python-dotenv walks up from
-`src/intervals_sync.py`'s own location to the project root), regardless of what
-working directory the MCP host launches the server from.
+`--directory` matters here — MCP hosts don't guarantee a working directory when
+they spawn the server, and `uv run` needs to be pointed at the project to find
+its venv. No `env` block needed beyond that — `.env` is found automatically
+(python-dotenv walks up from `src/intervals_sync.py`'s own location to the
+project root) regardless of cwd.
 
 Restart Claude Desktop / Claude Code after editing. You should then be able
 to ask things like "how has my resting HR trended over the last month?" or
@@ -29,7 +31,7 @@ chat, and Claude will call these tools.
 
 The mobile app needs an HTTPS URL, not a local stdio process. The
 lower-effort path here is **Tailscale Funnel**: run the MCP server as an
-HTTP server (FastMCP supports `mcp.run(transport="streamable-http")`) on
+HTTP server (`MCPServer` supports `mcp.run(transport="streamable-http")`) on
 your always-on sync machine, expose it with `tailscale funnel`, and add that
 URL as a custom connector in Claude's settings. This keeps the data off the
 public internet — only devices on your tailnet (or explicitly funneled) can

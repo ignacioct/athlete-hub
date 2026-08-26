@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "athlete-hub": {
-      "command": "/Users/ignacio/Documents/athlete-hub/.venv/bin/python",
-      "args": ["/Users/ignacio/Documents/athlete-hub/mcp_server/server.py"]
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/ignacio/Documents/athlete-hub", "mcp_server/server.py"]
     }
   }
 }

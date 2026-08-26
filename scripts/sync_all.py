@@ -5,7 +5,7 @@ isn't guaranteed to be on, so this is triggered instead by the dashboard's
 "Sync now" button (dashboard/server.py's POST /api/sync) or by asking Claude
 to sync (mcp_server/server.py's sync_now tool). Both call main() below.
 
-    python scripts/sync_all.py --days 7
+    uv run scripts/sync_all.py --days 7
 
 --days controls the Garmin/intervals.icu lookback window. Garmin's sync logs
 in via Selenium on every run, so a routine sync should use a short window (7

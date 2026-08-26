@@ -86,6 +86,7 @@ def pull_to_db(days_back: int = 90) -> tuple[int, int]:
                     training_load, raw_json
                 ) VALUES (?, 'intervals', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
+                    start_time_utc = excluded.start_time_utc,
                     training_load = excluded.training_load,
                     raw_json = excluded.raw_json,
                     updated_at = datetime('now')
@@ -94,7 +95,11 @@ def pull_to_db(days_back: int = 90) -> tuple[int, int]:
                     f"intervals:{a['id']}",
                     a.get("type"),
                     a.get("name"),
-                    a.get("start_date_local"),
+                    # start_date is real UTC ("...Z"); start_date_local is local
+                    # time — the column is start_time_utc, so use the former.
+                    # Strip the trailing Z to match garmin_sync.py's convention
+                    # of storing naive-UTC timestamps in this column.
+                    (a.get("start_date") or "").rstrip("Z"),
                     a.get("moving_time"),
                     a.get("distance"),
                     a.get("average_heartrate"),

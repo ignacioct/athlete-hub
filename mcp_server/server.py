@@ -3,7 +3,7 @@ MCP server for athlete-hub. Exposes the local SQLite DB (Garmin + Hevy +
 intervals.icu, unified) and the workout/race creation path to Claude.
 
 Run standalone for testing:
-    python mcp_server/server.py
+    uv run mcp_server/server.py
 
 Add to Claude Desktop / Claude Code config (see mcp_server/README.md).
 """
@@ -55,7 +55,10 @@ def get_activities(start_date: str, end_date: str, sport: str | None = None) -> 
     Returns activities from both Garmin and intervals.icu. Garmin's own
     strength-training entries are excluded by default (is_strength_duplicate)
     since Hevy has the real per-set detail for those — use get_strength_sets
-    for lifting data instead.
+    for lifting data instead. Garmin's copy of a run/ride is also excluded
+    whenever intervals.icu has the same activity (matched by start time,
+    since intervals.icu mirrors your Garmin activities once connected) —
+    intervals.icu's copy carries training-load data Garmin's doesn't.
     """
     init_db()
     query = """
@@ -64,6 +67,14 @@ def get_activities(start_date: str, end_date: str, sport: str | None = None) -> 
         FROM activities
         WHERE start_time_utc >= ? AND start_time_utc <= ?
           AND is_strength_duplicate = 0
+          AND NOT (
+              source = 'garmin'
+              AND EXISTS (
+                  SELECT 1 FROM activities a2
+                  WHERE a2.source = 'intervals'
+                    AND ABS(strftime('%s', a2.start_time_utc) - strftime('%s', activities.start_time_utc)) < 600
+              )
+          )
     """
     params = [start_date, end_date + "T23:59:59"]
     if sport:

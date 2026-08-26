@@ -61,24 +61,23 @@ athlete-hub/
 
 4. **First sync:**
    ```bash
-   python scripts/sync_all.py
+   uv run scripts/sync_all.py
    ```
 
-5. **Verify the Garmin adapter against your real data.** `garmin-givemydata`'s
-   export format can shift between versions, and I built the column mapping
-   in `garmin_sync.py` from its documentation rather than a live export (I
-   don't have network access in this environment to test against your
-   account). The first time you run it:
+5. **If you change the Garmin export mapping later:** `garmin-givemydata`'s
+   export format can shift between versions. `GARMIN_FIELD_MAP` /
+   `WELLNESS_SOURCES` near the top of `garmin_sync.py` are already verified
+   against a real export (see that file's docstring for specifics), but if a
+   future version of the library changes field names, re-run:
    ```bash
-   python -m src.garmin_sync --inspect
+   uv run -m src.garmin_sync --inspect
    ```
    This prints the raw export structure without writing to the DB, so you can
-   confirm (or fix) the field mapping in `GARMIN_FIELD_MAP` near the top of
-   the file before the real sync runs.
+   compare it against the field maps and fix anything that's drifted.
 
 6. **View the dashboard:**
    ```bash
-   python dashboard/server.py 8080
+   uv run dashboard/server.py 8080
    # open http://localhost:8080
    ```
    This serves the static dashboard *and* a "Sync now" button in the header —
@@ -104,7 +103,7 @@ miss runs. Instead, syncing is on-demand from two places that both just call
 Both default to a 7-day lookback (`garmin-givemydata`'s export always dumps
 its full accumulated local history regardless of `--days`, so `athlete.db`
 still ends up complete — the short window just keeps each sync's Garmin
-login/fetch step fast). Run `python scripts/sync_all.py --days 90` manually
+login/fetch step fast). Run `uv run scripts/sync_all.py --days 90` manually
 for a first-time backfill or if you've gone a while between syncs.
 
 ## Phone access
@@ -128,3 +127,20 @@ exposing your health data to the internet:
   from a cloud IP (e.g. GitHub Actions) is more likely to get blocked than a
   home connection — see `garmin-givemydata`'s own notes on this.
 - Hevy and intervals.icu syncs: both official APIs, much more stable.
+
+## Future work
+
+- **A real mobile layout for the dashboard.** `index.html` has basic
+  responsive CSS (the grid collapses to one column, tiles go 2-wide under
+  860px), but it hasn't been designed for phone use — no touch-friendly
+  sizing pass, no thought given to what matters most on a small screen.
+  Reachability from a phone is already solved (see "Phone access" above);
+  what's missing is the UX itself.
+- **Hevy sync.** Currently skipped entirely — `sync_now`/`sync_all.py`
+  always reports `hevy: FAILED: HEVY_API_KEY is not set`, and
+  `strength_sessions`/`strength_sets` stay empty, since the official API
+  needs a Hevy Pro subscription. Two ways to unblock it: subscribe to Pro
+  and `src/hevy_sync.py` already works against the real API as written, or
+  build a CSV importer against Hevy's free-tier "Export Data" feature
+  instead (different shape — manual/periodic export instead of a live API
+  pull, so `sync_all.py`/`sync_now` couldn't trigger it automatically).
