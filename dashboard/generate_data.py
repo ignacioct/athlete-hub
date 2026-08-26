@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Dumps a snapshot of the DB to dashboard/data.json for the static dashboard
-to read. Run after each sync (scripts/sync_all.py can call this too), or
-schedule it right after the cron sync.
+to read. scripts/sync_all.py already calls this after every sync — run it
+standalone only if you want to refresh data.json without a full sync.
 """
 
 import json

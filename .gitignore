@@ -15,5 +15,6 @@ garmin.db
 garmin_session.json
 debug.log
 downloaded_files/
+fit/
 
 .DS_Store

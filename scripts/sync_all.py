@@ -54,6 +54,6 @@ def main(days_back: int = 90) -> dict:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--days", type=int, default=90, help="lookback window for Garmin/intervals.icu (default 90; use a small window for routine cron runs)")
+    parser.add_argument("--days", type=int, default=90, help="lookback window for Garmin/intervals.icu (default 90; use a small window for routine on-demand syncs)")
     args = parser.parse_args()
     main(args.days)
