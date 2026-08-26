@@ -111,7 +111,7 @@ def get_strength_sets(exercise: str | None = None, start_date: str | None = None
                        end_date: str | None = None, limit: int = 100) -> list[dict]:
     """
     Get individual lifting sets from Hevy, optionally filtered by exercise
-    name (e.g. 'Back Squat (Barbell)') and/or date range. Ordered newest
+    name (e.g. 'Squat (Barbell)') and/or date range. Ordered newest
     first. Use this to track weight/reps/RPE progression over time.
     """
     init_db()

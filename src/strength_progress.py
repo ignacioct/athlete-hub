@@ -17,6 +17,7 @@ set a new record, not continuously, so it can't drive a progression chart
 on its own.
 """
 
+import json
 from datetime import date, timedelta
 
 CORE_LIFTS = [
@@ -121,8 +122,6 @@ def recent_prs(conn, limit: int = 8) -> list[dict]:
         """,
         (limit * 3,),  # a session can have multiple PR'd sets; overfetch then trim
     ).fetchall()
-
-    import json
 
     out = []
     for r in rows:

@@ -29,8 +29,7 @@ is a different (private, mobile-app-facing) API entirely:
     PAGE_SIZE is 5 here for that reason; confirmed offset-based pagination
     doesn't overlap/skip at that size.
 GARMIN_FIELD_MAP-style constants aren't used here since the shape is simple
-enough that inline `.get()` calls stay readable — see HEVY_WORKOUT_FIELDS
-below if that changes.
+enough that inline `.get()` calls stay readable.
 """
 
 import argparse
