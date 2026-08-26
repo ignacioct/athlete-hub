@@ -314,8 +314,8 @@
     <canvas id="vo2Chart" height="60"></canvas>
   </div>
 
-  <!-- ============ STRENGTH (WIP) ============ -->
-  <div class="section-header section-strength span-12">Strength <span class="wip">WIP — Hevy not yet connected</span></div>
+  <!-- ============ STRENGTH ============ -->
+  <div class="section-header section-strength span-12">Strength</div>
 
   <!-- Strength progress -->
   <div class="panel span-12">
@@ -804,7 +804,7 @@ function renderStrengthChart(sets) {
   const emptyEl = document.getElementById('strength-empty');
   const canvas = document.getElementById('strengthChart');
   if (!sets || sets.length === 0) {
-    emptyEl.innerHTML = '<div class="empty">No strength data yet — Hevy isn\'t connected (needs a Pro subscription). See the README\'s "Future work" section.</div>';
+    emptyEl.innerHTML = '<div class="empty">No strength data yet — click "Sync now" or ask Claude to sync.</div>';
     canvas.style.display = 'none';
     return;
   }
