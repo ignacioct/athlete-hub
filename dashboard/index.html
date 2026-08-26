@@ -303,7 +303,7 @@
 
   <!-- VO2 max -->
   <div class="panel span-12">
-    <div class="panel-label">VO2 max <span>running, 180d</span></div>
+    <div class="panel-label">VO2 max <span>running, 365d</span></div>
     <canvas id="vo2Chart" height="60"></canvas>
   </div>
 
@@ -732,15 +732,17 @@ function renderBatteryChart(daily) {
   });
 }
 
-function renderVo2Chart(daily) {
-  const vals = daily.map(d => d.vo2max_running);
+function renderVo2Chart(history) {
+  // history is already non-null-only readings (see generate_data.py) over
+  // a full year, independent of the dashboard's shared 180-day window —
+  // VO2 max updates too rarely for that window to show much of a trend.
   new Chart(document.getElementById('vo2Chart'), {
     type: 'line',
     data: {
-      labels: daily.map(d => d.date),
+      labels: history.map(d => d.date),
       datasets: [{
         label: 'VO2 max',
-        data: vals,
+        data: history.map(d => d.vo2max_running),
         borderColor: '#4C8FBD',
         backgroundColor: '#4C8FBD22',
         fill: true,
@@ -858,7 +860,7 @@ function renderStrengthChart(sets) {
   renderBatteryChart(daily);
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);
-  renderVo2Chart(daily);
+  renderVo2Chart(data.vo2max_history || []);
   renderStrengthChart(data.strength_sets || []);
 })();
 

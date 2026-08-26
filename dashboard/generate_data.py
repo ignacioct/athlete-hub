@@ -71,6 +71,23 @@ def main(days_back: int = 180) -> None:
 
         weekly_workouts = get_weekly_workouts(conn, date.today())
 
+        # VO2 max only updates every few days, so the shared `days_back`
+        # window (180d by default) leaves the trend chart sparse. It gets
+        # its own year-long, non-null-only query instead of stretching
+        # every other (daily) metric's window along with it.
+        vo2max_history = [
+            dict(r)
+            for r in conn.execute(
+                """
+                SELECT date, vo2max_running
+                FROM daily_metrics
+                WHERE vo2max_running IS NOT NULL AND date >= ?
+                ORDER BY date ASC
+                """,
+                ((date.today() - timedelta(days=365)).isoformat(),),
+            ).fetchall()
+        ]
+
     OUTPUT.write_text(
         json.dumps(
             {
@@ -80,12 +97,13 @@ def main(days_back: int = 180) -> None:
                 "strength_sets": strength,
                 "races": races,
                 "weekly_workouts": weekly_workouts,
+                "vo2max_history": vo2max_history,
             },
             indent=2,
             default=str,
         )
     )
-    print(f"Wrote {OUTPUT} ({len(activities)} activities, {len(daily)} days, {len(strength)} sets, {len(races)} races, {len(weekly_workouts)} weekly workouts)")
+    print(f"Wrote {OUTPUT} ({len(activities)} activities, {len(daily)} days, {len(strength)} sets, {len(races)} races, {len(weekly_workouts)} weekly workouts, {len(vo2max_history)} vo2max readings)")
 
 
 if __name__ == "__main__":
