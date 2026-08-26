@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS strength_sets (
     weight_kg       REAL,
     reps            INTEGER,
     rpe             REAL,
+    prs_json        TEXT,                  -- Hevy's own PR flags for this set, e.g. [{"type":"best_1rm","value":105.5}]
     UNIQUE(session_id, exercise, set_index)
 );
 
@@ -136,9 +137,26 @@ def get_conn(db_path: str | None = None):
         conn.close()
 
 
+# CREATE TABLE IF NOT EXISTS is a no-op against an already-existing table,
+# so schema additions on a live DB need an explicit migration. Each entry is
+# (table, column, ddl_type) and is applied idempotently via ALTER TABLE,
+# since SQLite has no ADD COLUMN IF NOT EXISTS.
+_MIGRATIONS = [
+    ("strength_sets", "prs_json", "TEXT"),
+]
+
+
+def _apply_migrations(conn) -> None:
+    for table, column, ddl_type in _MIGRATIONS:
+        existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl_type}")
+
+
 def init_db(db_path: str | None = None) -> None:
     with get_conn(db_path) as conn:
         conn.executescript(SCHEMA)
+        _apply_migrations(conn)
 
 
 def mark_synced(source: str, status: str = "ok", note: str = "", db_path: str | None = None) -> None:

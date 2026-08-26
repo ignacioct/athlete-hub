@@ -168,6 +168,32 @@
   .badge-upcoming { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
   .badge-rest { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
 
+  /* --- weekly split --- */
+  .split-row { display: flex; gap: 12px; }
+  .split-item {
+    flex: 1;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+  .split-item.done { border-color: var(--good); }
+  .split-category { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .split-status { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+  .split-status.done { color: var(--good); }
+
+  /* --- recent PRs --- */
+  .pr-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pr-row:last-child { border-bottom: none; }
+  .pr-value { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; text-align: right; white-space: nowrap; }
+
   .empty { color: var(--text-dim); font-size: 13px; padding: 12px 4px; }
 
   canvas { max-width: 100%; }
@@ -317,12 +343,24 @@
   <!-- ============ STRENGTH ============ -->
   <div class="section-header section-strength span-12">Strength</div>
 
-  <!-- Strength progress -->
+  <!-- Weekly split -->
+  <div class="panel span-5">
+    <div class="panel-label">This week's split <span>Push / Pull / Legs</span></div>
+    <div id="weekly-split"></div>
+  </div>
+
+  <!-- Recent PRs -->
+  <div class="panel span-7">
+    <div class="panel-label">Recent PRs <span>Hevy-flagged</span></div>
+    <div id="recent-prs"></div>
+  </div>
+
+  <!-- Estimated 1RM -->
   <div class="panel span-12">
-    <div class="panel-label">Strength progress <span>top lifts, session max weight</span></div>
-    <div class="chart-caption">Heaviest working weight per session for your 4 most-logged exercises — a simple strength-progression signal, not 1RM.</div>
-    <div id="strength-empty"></div>
-    <canvas id="strengthChart" height="70"></canvas>
+    <div class="panel-label">Estimated 1RM <span>core lifts</span></div>
+    <div class="chart-caption">Best non-warmup set each session, converted via the Epley formula — an estimate, not a tested max.</div>
+    <div id="core-lifts-empty"></div>
+    <canvas id="oneRMChart" height="70"></canvas>
   </div>
 
 </div>
@@ -800,45 +838,67 @@ function renderVolumeChart(activities) {
   });
 }
 
-function renderStrengthChart(sets) {
-  const emptyEl = document.getElementById('strength-empty');
-  const canvas = document.getElementById('strengthChart');
-  if (!sets || sets.length === 0) {
-    emptyEl.innerHTML = '<div class="empty">No strength data yet — click "Sync now" or ask Claude to sync.</div>';
+function renderWeeklySplit(split) {
+  const el = document.getElementById('weekly-split');
+  el.innerHTML = `<div class="split-row">${(split || []).map(s => `
+    <div class="split-item ${s.done ? 'done' : ''}">
+      <div class="split-category">${s.category}</div>
+      <div class="split-status ${s.done ? 'done' : ''}">${s.done ? '✓ ' + s.date : 'Not yet'}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+const PR_TYPE_LABELS = { best_weight: 'Best weight', best_volume: 'Best volume', best_1rm: 'Best est. 1RM' };
+
+function renderRecentPRs(prs) {
+  const el = document.getElementById('recent-prs');
+  if (!prs || prs.length === 0) {
+    el.innerHTML = '<div class="empty">No PRs logged yet.</div>';
+    return;
+  }
+  el.innerHTML = prs.map(pr => `
+    <div class="pr-row">
+      <div>
+        <span class="workout-name">${pr.exercise}</span>
+        <div class="workout-detail">${PR_TYPE_LABELS[pr.type] || pr.type} · ${pr.date}</div>
+      </div>
+      <div class="pr-value">${pr.value}${pr.type === 'best_volume' ? ' kg vol' : ' kg'}</div>
+    </div>
+  `).join('');
+}
+
+function renderOneRMChart(coreLifts) {
+  const emptyEl = document.getElementById('core-lifts-empty');
+  const canvas = document.getElementById('oneRMChart');
+  const entries = Object.entries(coreLifts || {}).filter(([, points]) => points.length > 0);
+  if (entries.length === 0) {
+    emptyEl.innerHTML = '<div class="empty">No core-lift data yet — click "Sync now" or ask Claude to sync.</div>';
     canvas.style.display = 'none';
     return;
   }
   emptyEl.innerHTML = '';
   canvas.style.display = '';
 
-  const byExercise = {};
-  sets.forEach(s => {
-    if (!s.weight_kg) return;
-    byExercise[s.exercise] = byExercise[s.exercise] || {};
-    const date = s.start_time_utc.slice(0, 10);
-    byExercise[s.exercise][date] = Math.max(byExercise[s.exercise][date] || 0, s.weight_kg);
-  });
-  const topExercises = Object.entries(byExercise)
-    .sort((a, b) => Object.keys(b[1]).length - Object.keys(a[1]).length)
-    .slice(0, 4);
+  const palette = ['#C6963C', '#4C8FBD', '#6FA46A', '#C1502E', '#8A8D93', '#B15FB0'];
+  const allDates = [...new Set(entries.flatMap(([, points]) => points.map(p => p.date)))].sort();
 
-  const palette = ['#C6963C', '#4C8FBD', '#6FA46A', '#C1502E'];
-  const allDates = [...new Set(topExercises.flatMap(([, d]) => Object.keys(d)))].sort();
-
-  new Chart(document.getElementById('strengthChart'), {
+  new Chart(document.getElementById('oneRMChart'), {
     type: 'line',
     data: {
       labels: allDates,
-      datasets: topExercises.map(([name, d], i) => ({
-        label: name,
-        data: allDates.map(date => d[date] ?? null),
-        borderColor: palette[i % palette.length],
-        backgroundColor: 'transparent',
-        spanGaps: true,
-        tension: 0.2,
-        pointRadius: 2,
-        borderWidth: 2,
-      }))
+      datasets: entries.map(([name, points], i) => {
+        const byDate = Object.fromEntries(points.map(p => [p.date, p.est_1rm_kg]));
+        return {
+          label: name,
+          data: allDates.map(d => byDate[d] ?? null),
+          borderColor: palette[i % palette.length],
+          backgroundColor: 'transparent',
+          spanGaps: true,
+          tension: 0.2,
+          pointRadius: 2,
+          borderWidth: 2,
+        };
+      })
     },
     options: {
       responsive: true,
@@ -869,7 +929,9 @@ function renderStrengthChart(sets) {
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);
   renderVo2Chart(data.vo2max_history || []);
-  renderStrengthChart(data.strength_sets || []);
+  renderWeeklySplit(data.weekly_split || []);
+  renderRecentPRs(data.recent_prs || []);
+  renderOneRMChart(data.core_lifts || {});
 })();
 
 document.getElementById('sync-btn').addEventListener('click', async () => {

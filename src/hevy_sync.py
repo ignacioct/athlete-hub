@@ -116,13 +116,14 @@ def upsert_workout(conn, workout: dict) -> None:
         for set_index, s in enumerate(exercise.get("sets", [])):
             conn.execute(
                 """
-                INSERT INTO strength_sets (session_id, exercise, set_index, set_type, weight_kg, reps, rpe)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO strength_sets (session_id, exercise, set_index, set_type, weight_kg, reps, rpe, prs_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(session_id, exercise, set_index) DO UPDATE SET
                     set_type = excluded.set_type,
                     weight_kg = excluded.weight_kg,
                     reps = excluded.reps,
-                    rpe = excluded.rpe
+                    rpe = excluded.rpe,
+                    prs_json = excluded.prs_json
                 """,
                 (
                     session_id,
@@ -132,6 +133,7 @@ def upsert_workout(conn, workout: dict) -> None:
                     s.get("weight_kg"),
                     s.get("reps"),
                     s.get("rpe"),
+                    json.dumps(s.get("prs")) if s.get("prs") else None,
                 ),
             )
 

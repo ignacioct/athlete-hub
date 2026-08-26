@@ -20,6 +20,7 @@ from scripts.sync_all import main as run_sync_all
 from src.db import get_conn, init_db
 from src.intervals_sync import push_workout
 from src.races import add_race, list_races, update_race_status
+from src.strength_progress import core_lift_1rm_history, recent_prs, weekly_split_status
 from src.weekly_workouts import get_weekly_workouts as _get_weekly_workouts
 
 mcp = MCPServer("athlete-hub")
@@ -137,6 +138,36 @@ def get_strength_sets(exercise: str | None = None, start_date: str | None = None
     with get_conn() as conn:
         rows = conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
+
+
+@mcp.tool()
+def get_strength_progress() -> dict:
+    """
+    Strength training summary: this week's Push/Pull/Legs split status,
+    estimated 1RM history for your core lifts (Chest Press Machine, Lat
+    Pulldown Cable, Seated Incline Curl Dumbbell, Triceps Pushdown, Squat
+    Barbell, Romanian Deadlift Barbell), and your most recent Hevy-flagged
+    PRs.
+
+    weekly_split: one entry per category with done (bool) and the date it
+    was done, based on your Hevy session titles ("Push"/"Pull"/"Lower Body"
+    or "Legs") — not muscle-group inference.
+
+    core_lifts: {exercise: [{date, est_1rm_kg}, ...]}. Estimated via the
+    Epley formula from each session's best non-warmup set — a real 1RM
+    test isn't something you log, so this is an estimate, not a max-effort
+    result.
+
+    recent_prs: Hevy's own PR flags (best_weight / best_volume / best_1rm),
+    newest first, across all exercises (not just the core lifts above).
+    """
+    init_db()
+    with get_conn() as conn:
+        return {
+            "weekly_split": weekly_split_status(conn, date.today()),
+            "core_lifts": core_lift_1rm_history(conn),
+            "recent_prs": recent_prs(conn),
+        }
 
 
 @mcp.tool()
