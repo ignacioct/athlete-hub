@@ -55,7 +55,9 @@ athlete-hub/
    (or, without [uv](https://docs.astral.sh/uv/): `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`)
 
 3. **Credentials** — copy `.env.example` to `.env` and fill in:
-   - `HEVY_API_KEY` — from https://hevy.com/settings?developer (requires Hevy Pro)
+   - `HEVY_EMAIL` — your Hevy account email. Also run `python scripts/hevy_login.py`
+     once (see that file's docstring) — Hevy isn't Pro-gated here, but does need a
+     one-time manual token capture; see "What's genuinely fragile here".
    - `INTERVALS_ATHLETE_ID` and `INTERVALS_API_KEY` — from https://intervals.icu/settings ("Developer Settings")
    - `GARMIN_EMAIL` / `GARMIN_PASSWORD` — your Garmin Connect login (used locally only, never sent anywhere but Garmin)
 
@@ -136,7 +138,18 @@ exposing your health data to the internet:
   here never breaks the rest of the sync, but if `garmin_client`'s internals
   change, this specific feature silently stops working until someone
   updates it.
-- Hevy and intervals.icu syncs: both official APIs, much more stable.
+- `src/hevy_sync.py`: uses `hevy-unofficial`, a reverse-engineered client
+  with **0 GitHub stars/forks, 6 commits, alpha version, one maintainer** —
+  no track record at all compared to `garmin-givemydata`. If Hevy changes
+  their private API, there's no community to notice or patch it; that falls
+  on us. Also: its automated Playwright browser login doesn't work for a
+  Google-linked Hevy account — Google detects and blocks OAuth sign-ins
+  from automated browsers. `scripts/hevy_login.py` works around this with a
+  fully manual flow (log in normally in your own browser, copy one cookie
+  value) that Google has no reason to block. `/user_workouts_paged` also
+  silently 400s if `limit` is set above 5 — undocumented, found by testing;
+  `PAGE_SIZE = 5` in `hevy_sync.py` is not arbitrary.
+- intervals.icu sync: official API, stable.
 
 ## Future work
 
@@ -146,11 +159,10 @@ exposing your health data to the internet:
   sizing pass, no thought given to what matters most on a small screen.
   Reachability from a phone is already solved (see "Phone access" above);
   what's missing is the UX itself.
-- **Hevy sync.** Currently skipped entirely — `sync_now`/`sync_all.py`
-  always reports `hevy: FAILED: HEVY_API_KEY is not set`, and
-  `strength_sessions`/`strength_sets` stay empty, since the official API
-  needs a Hevy Pro subscription. Two ways to unblock it: subscribe to Pro
-  and `src/hevy_sync.py` already works against the real API as written, or
-  build a CSV importer against Hevy's free-tier "Export Data" feature
-  instead (different shape — manual/periodic export instead of a live API
-  pull, so `sync_all.py`/`sync_now` couldn't trigger it automatically).
+- **Hevy sync is live** (via `hevy-unofficial`, not the Pro-gated official
+  API — see "What's genuinely fragile here" for the real tradeoffs of that
+  choice). If it ever breaks and doesn't get fixed upstream, the fallback
+  is a CSV importer against Hevy's free-tier "Export Data" feature —
+  different shape (manual/periodic export instead of a live API pull, so
+  `sync_all.py`/`sync_now` couldn't trigger it automatically), but zero
+  reverse-engineering risk.
