@@ -113,6 +113,10 @@
   .tile-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
   .tile-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
   .tile-value .unit { font-size: 12px; color: var(--text-dim); font-weight: 400; margin-left: 3px; }
+  .tile-trend { font-family: 'IBM Plex Mono', monospace; font-size: 10px; margin-top: 5px; }
+  .tile-trend.trend-good { color: var(--good); }
+  .tile-trend.trend-bad { color: var(--alert); }
+  .tile-trend.trend-flat { color: var(--text-dim); }
   @media (max-width: 860px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 
   /* --- race cards --- */
@@ -470,23 +474,75 @@ function fmtBodyBattery(min, max) {
   return `${Math.round(min)}–${Math.round(max)}`;
 }
 
+function mostRecentValue(daily, field) {
+  for (let i = daily.length - 1; i >= 0; i--) {
+    if (daily[i][field] != null) return daily[i][field];
+  }
+  return null;
+}
+
+const TREND_CONFIG = {
+  resting_hr:       { higherIsBetter: false, label: 'bpm',   fmtDelta: d => Math.round(Math.abs(d)) },
+  hrv:              { higherIsBetter: true,  label: 'ms',    fmtDelta: d => Math.round(Math.abs(d)) },
+  sleep_score:      { higherIsBetter: true,  label: 'pts',   fmtDelta: d => Math.round(Math.abs(d)) },
+  steps:            { higherIsBetter: true,  label: '',      fmtDelta: d => Math.round(Math.abs(d)).toLocaleString() },
+  sleep_duration_s: { higherIsBetter: true,  label: 'min',   fmtDelta: d => Math.round(Math.abs(d) / 60) },
+  stress_avg:       { higherIsBetter: false, label: 'pts',   fmtDelta: d => Math.round(Math.abs(d)) },
+  vo2max_running:   { higherIsBetter: true,  label: '',      fmtDelta: d => Math.abs(d).toFixed(1), sparse: true },
+};
+
+function computeTrend(daily, field) {
+  const cfg = TREND_CONFIG[field];
+  const vals = daily.map(d => d[field]);
+  let today, baseline, compareLabel;
+
+  if (cfg.sparse) {
+    // Fields like VO2 max only update every few days — a 7-day trailing
+    // average would usually just measure "how much missing data is
+    // there", so compare the two most recent actual readings instead.
+    const idx = [];
+    for (let k = 0; k < vals.length; k++) if (vals[k] != null) idx.push(k);
+    if (idx.length < 2) return '';
+    today = vals[idx[idx.length - 1]];
+    baseline = vals[idx[idx.length - 2]];
+    compareLabel = 'vs last reading';
+  } else {
+    const i = vals.length - 1;
+    today = vals[i];
+    if (today == null) return '';
+    baseline = trailingAverage(vals, i, 7);
+    compareLabel = 'vs 7d avg';
+  }
+  if (baseline == null) return '';
+
+  const delta = today - baseline;
+  if (Math.abs(delta) < 0.05) {
+    return `<div class="tile-trend trend-flat">→ flat ${compareLabel}</div>`;
+  }
+  const up = delta > 0;
+  const good = up === cfg.higherIsBetter;
+  const deltaText = `${cfg.fmtDelta(delta)}${cfg.label ? ' ' + cfg.label : ''}`;
+  return `<div class="tile-trend ${good ? 'trend-good' : 'trend-bad'}">${up ? '▲' : '▼'} ${deltaText} ${compareLabel}</div>`;
+}
+
 function renderTiles(daily) {
   const latest = daily.length ? daily[daily.length - 1] : {};
   document.getElementById('tiles-date').textContent = latest.date || '';
   const defs = [
-    ['Resting HR', latest.resting_hr, 'bpm'],
-    ['HRV', latest.hrv, 'ms'],
-    ['Sleep score', latest.sleep_score, ''],
-    ['Steps', latest.steps, ''],
-    ['Sleep duration', fmtHoursMin(latest.sleep_duration_s), ''],
-    ['Body battery', fmtBodyBattery(latest.body_battery_min, latest.body_battery_max), ''],
-    ['Stress', latest.stress_avg, ''],
-    ['VO2 max', latest.vo2max_running, 'ml/kg/min'],
+    ['Resting HR', latest.resting_hr, 'bpm', 'resting_hr'],
+    ['HRV', latest.hrv, 'ms', 'hrv'],
+    ['Sleep score', latest.sleep_score, '', 'sleep_score'],
+    ['Steps', latest.steps, '', 'steps'],
+    ['Sleep duration', fmtHoursMin(latest.sleep_duration_s), '', 'sleep_duration_s'],
+    ['Body battery', fmtBodyBattery(latest.body_battery_min, latest.body_battery_max), '', null],
+    ['Stress', latest.stress_avg, '', 'stress_avg'],
+    ['VO2 max', mostRecentValue(daily, 'vo2max_running'), 'ml/kg/min', 'vo2max_running'],
   ];
-  document.getElementById('tiles').innerHTML = defs.map(([label, val, unit]) => `
+  document.getElementById('tiles').innerHTML = defs.map(([label, val, unit, field]) => `
     <div class="tile">
       <div class="tile-label">${label}</div>
       <div class="tile-value">${val ?? '—'}<span class="unit">${unit}</span></div>
+      ${field ? computeTrend(daily, field) : ''}
     </div>
   `).join('');
 }
