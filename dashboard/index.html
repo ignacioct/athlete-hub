@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>athlete-hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:        #15161A;
+    --panel:     #1D1F24;
+    --panel-2:   #22242A;
+    --line:      #2B2E35;
+    --text:      #E7E4DD;
+    --text-dim:  #83868C;
+    --run:       #4C8FBD;
+    --run-dim:   #2E4A5C;
+    --lift:      #C6963C;
+    --lift-dim:  #5C4A28;
+    --alert:     #C1502E;
+    --good:      #6FA46A;
+    --radius:    2px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    padding: 32px 24px 80px;
+    min-height: 100vh;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  header h1 span { color: var(--text-dim); font-weight: 400; }
+
+  header .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .panel-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* --- layout spans --- */
+  .span-4 { grid-column: span 4; }
+  .span-5 { grid-column: span 5; }
+  .span-7 { grid-column: span 7; }
+  .span-8 { grid-column: span 8; }
+  .span-12 { grid-column: span 12; }
+
+  @media (max-width: 860px) {
+    .span-4, .span-5, .span-7, .span-8, .span-12 { grid-column: span 12; }
+  }
+
+  /* --- readiness dial (signature element) --- */
+  .dial-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .dial-value { font-family: 'IBM Plex Mono', monospace; font-size: 34px; font-weight: 600; margin-top: -8px; }
+  .dial-caption { font-size: 12px; color: var(--text-dim); text-align: center; max-width: 220px; }
+
+  /* --- stat tiles --- */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .tile { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
+  .tile-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .tile-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
+  .tile-value .unit { font-size: 12px; color: var(--text-dim); font-weight: 400; margin-left: 3px; }
+  @media (max-width: 860px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+
+  /* --- race cards --- */
+  .race-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .race-card:last-child { border-bottom: none; }
+  .race-name { font-weight: 500; font-size: 14px; }
+  .race-date { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+  .race-days { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; text-align: right; }
+  .race-days .unit { font-size: 10px; color: var(--text-dim); display: block; text-transform: uppercase; }
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-right: 8px;
+  }
+  .badge-A { background: var(--alert); color: #17181C; }
+  .badge-B { background: var(--run-dim); color: var(--run); }
+  .badge-C { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
+
+  .empty { color: var(--text-dim); font-size: 13px; padding: 12px 4px; }
+
+  canvas { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>athlete-hub <span>/ training console</span></h1>
+  <div class="meta" id="generated-at">— loading —</div>
+</header>
+
+<div class="grid">
+
+  <!-- Signature: readiness dial -->
+  <div class="panel span-4">
+    <div class="panel-label">Readiness <span>Form (CTL−ATL)</span></div>
+    <div class="dial-wrap">
+      <svg id="dial" width="200" height="120" viewBox="0 0 200 120"></svg>
+      <div class="dial-value mono" id="dial-value">—</div>
+      <div class="dial-caption">Fitness minus fatigue, from intervals.icu. Negative = still absorbing load, positive = fresh.</div>
+    </div>
+  </div>
+
+  <!-- Race calendar -->
+  <div class="panel span-8">
+    <div class="panel-label">Upcoming races</div>
+    <div id="races"></div>
+  </div>
+
+  <!-- Daily metric tiles -->
+  <div class="panel span-12">
+    <div class="panel-label">Today <span id="tiles-date"></span></div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+
+  <!-- Training load -->
+  <div class="panel span-7">
+    <div class="panel-label">Training load <span>CTL / ATL, 180d</span></div>
+    <canvas id="loadChart" height="90"></canvas>
+  </div>
+
+  <!-- Weekly running volume -->
+  <div class="panel span-5">
+    <div class="panel-label">Weekly running volume <span>km</span></div>
+    <canvas id="volumeChart" height="110"></canvas>
+  </div>
+
+  <!-- Strength progress -->
+  <div class="panel span-12">
+    <div class="panel-label">Strength progress <span>top lifts, session max weight</span></div>
+    <canvas id="strengthChart" height="70"></canvas>
+  </div>
+
+</div>
+
+<script>
+const FONT = "'IBM Plex Mono', monospace";
+Chart.defaults.color = '#83868C';
+Chart.defaults.font.family = FONT;
+Chart.defaults.font.size = 11;
+Chart.defaults.borderColor = '#2B2E35';
+
+async function loadData() {
+  try {
+    const res = await fetch('data.json');
+    if (!res.ok) throw new Error('no data.json yet');
+    return await res.json();
+  } catch (e) {
+    document.getElementById('generated-at').textContent = 'no data.json — run generate_data.py first';
+    return null;
+  }
+}
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+
+function drawDial(form) {
+  const svg = document.getElementById('dial');
+  const cx = 100, cy = 105, r = 85;
+  const min = -30, max = 30;
+  const clamped = Math.max(min, Math.min(max, form ?? 0));
+  const angle = (clamped - min) / (max - min) * 180; // 0..180
+  const rad = (angle - 180) * Math.PI / 180;
+  const needleX = cx + r * 0.82 * Math.cos(rad);
+  const needleY = cy + r * 0.82 * Math.sin(rad);
+
+  let svgHtml = '';
+  // tick marks, watch-bezel style
+  for (let i = 0; i <= 12; i++) {
+    const a = (i / 12) * 180;
+    const arad = (a - 180) * Math.PI / 180;
+    const inner = r * 0.88, outer = r;
+    const x1 = cx + inner * Math.cos(arad), y1 = cy + inner * Math.sin(arad);
+    const x2 = cx + outer * Math.cos(arad), y2 = cy + outer * Math.sin(arad);
+    svgHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#3A3D45" stroke-width="2"/>`;
+  }
+  // colored zones
+  svgHtml += `<path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx - r*0.3} ${cy - r*0.95}" stroke="#C1502E" stroke-width="4" fill="none" opacity="0.55"/>`;
+  svgHtml += `<path d="M ${cx - r*0.3} ${cy - r*0.95} A ${r} ${r} 0 0 1 ${cx + r*0.3} ${cy - r*0.95}" stroke="#8A8D93" stroke-width="4" fill="none" opacity="0.55"/>`;
+  svgHtml += `<path d="M ${cx + r*0.3} ${cy - r*0.95} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" stroke="#6FA46A" stroke-width="4" fill="none" opacity="0.55"/>`;
+  // needle
+  svgHtml += `<line x1="${cx}" y1="${cy}" x2="${needleX}" y2="${needleY}" stroke="#C6963C" stroke-width="3" stroke-linecap="round"/>`;
+  svgHtml += `<circle cx="${cx}" cy="${cy}" r="5" fill="#C6963C"/>`;
+
+  svg.innerHTML = svgHtml;
+  document.getElementById('dial-value').textContent = (form === null || form === undefined) ? '—' : (form > 0 ? '+' : '') + form.toFixed(1);
+}
+
+function renderRaces(races) {
+  const el = document.getElementById('races');
+  if (!races || races.length === 0) {
+    el.innerHTML = '<div class="empty">No upcoming races yet — ask Claude to add one.</div>';
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  el.innerHTML = races.slice(0, 6).map(r => `
+    <div class="race-card">
+      <div>
+        <span class="badge badge-${r.priority || 'B'}">${r.priority || 'B'}</span>
+        <span class="race-name">${r.name}</span><br>
+        <span class="race-date">${r.date}${r.distance_km ? ' · ' + r.distance_km + ' km' : ''}${r.goal_time ? ' · goal ' + r.goal_time : ''}</span>
+      </div>
+      <div class="race-days">${daysBetween(today, r.date)}<span class="unit">days</span></div>
+    </div>
+  `).join('');
+}
+
+function renderTiles(daily) {
+  const latest = daily.length ? daily[daily.length - 1] : {};
+  document.getElementById('tiles-date').textContent = latest.date || '';
+  const defs = [
+    ['Resting HR', latest.resting_hr, 'bpm'],
+    ['HRV', latest.hrv, 'ms'],
+    ['Sleep score', latest.sleep_score, ''],
+    ['Steps', latest.steps, ''],
+  ];
+  document.getElementById('tiles').innerHTML = defs.map(([label, val, unit]) => `
+    <div class="tile">
+      <div class="tile-label">${label}</div>
+      <div class="tile-value">${val ?? '—'}<span class="unit">${unit}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderLoadChart(daily) {
+  new Chart(document.getElementById('loadChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [
+        { label: 'CTL (fitness)', data: daily.map(d => d.ctl), borderColor: '#4C8FBD', backgroundColor: '#4C8FBD22', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+        { label: 'ATL (fatigue)', data: daily.map(d => d.atl), borderColor: '#C1502E', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 1.5 },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+        y: { grid: { color: '#2B2E35' } }
+      },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+function isoWeek(dateStr) {
+  const d = new Date(dateStr);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return d.getFullYear() + '-W' + (1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)).toString().padStart(2, '0');
+}
+
+function renderVolumeChart(activities) {
+  const runs = activities.filter(a => (a.sport || '').toLowerCase().includes('run'));
+  const byWeek = {};
+  runs.forEach(a => {
+    const wk = isoWeek(a.start_time_utc);
+    byWeek[wk] = (byWeek[wk] || 0) + (a.distance_m || 0) / 1000;
+  });
+  const weeks = Object.keys(byWeek).sort().slice(-16);
+  new Chart(document.getElementById('volumeChart'), {
+    type: 'bar',
+    data: {
+      labels: weeks,
+      datasets: [{ label: 'km', data: weeks.map(w => Math.round(byWeek[w] * 10) / 10), backgroundColor: '#4C8FBD', borderRadius: 2 }]
+    },
+    options: {
+      responsive: true,
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: '#2B2E35' } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function renderStrengthChart(sets) {
+  const byExercise = {};
+  sets.forEach(s => {
+    if (!s.weight_kg) return;
+    byExercise[s.exercise] = byExercise[s.exercise] || {};
+    const date = s.start_time_utc.slice(0, 10);
+    byExercise[s.exercise][date] = Math.max(byExercise[s.exercise][date] || 0, s.weight_kg);
+  });
+  const topExercises = Object.entries(byExercise)
+    .sort((a, b) => Object.keys(b[1]).length - Object.keys(a[1]).length)
+    .slice(0, 4);
+
+  const palette = ['#C6963C', '#4C8FBD', '#6FA46A', '#C1502E'];
+  const allDates = [...new Set(topExercises.flatMap(([, d]) => Object.keys(d)))].sort();
+
+  new Chart(document.getElementById('strengthChart'), {
+    type: 'line',
+    data: {
+      labels: allDates,
+      datasets: topExercises.map(([name, d], i) => ({
+        label: name,
+        data: allDates.map(date => d[date] ?? null),
+        borderColor: palette[i % palette.length],
+        backgroundColor: 'transparent',
+        spanGaps: true,
+        tension: 0.2,
+        pointRadius: 2,
+        borderWidth: 2,
+      }))
+    },
+    options: {
+      responsive: true,
+      scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { grid: { color: '#2B2E35' }, title: { display: true, text: 'kg', color: '#83868C' } } },
+      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
+    }
+  });
+}
+
+(async () => {
+  const data = await loadData();
+  if (!data) { drawDial(null); return; }
+
+  document.getElementById('generated-at').textContent = 'synced ' + data.generated_at;
+
+  const daily = data.daily_metrics || [];
+  const latestForm = daily.length ? daily[daily.length - 1].form : null;
+  drawDial(latestForm);
+
+  renderRaces(data.races || []);
+  renderTiles(daily);
+  renderLoadChart(daily);
+  renderVolumeChart(data.activities || []);
+  renderStrengthChart(data.strength_sets || []);
+})();
+</script>
+
+</body>
+</html>

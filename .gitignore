@@ -1,0 +1,19 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+data/*.db
+data/garmin_export/
+dashboard/data.json
+sync.log
+browser_profile/
+
+# garmin-givemydata's own local DB, session cookies, and debug log —
+# it writes these to the CWD, not into data/, and they hold real health
+# data / auth tokens.
+garmin.db
+garmin_session.json
+debug.log
+downloaded_files/
+
+.DS_Store

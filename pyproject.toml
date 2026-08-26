@@ -1,0 +1,15 @@
+[project]
+name = "athlete-hub"
+version = "0.1.0"
+description = "Centralizes Garmin, Hevy, and intervals.icu training data into one local DB with an MCP server and dashboard."
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+    "mcp>=1.2.0",
+    "garmin-givemydata @ git+https://github.com/nrvim/garmin-givemydata.git",
+]
+
+[tool.uv]
+package = false
