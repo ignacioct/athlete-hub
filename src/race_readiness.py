@@ -8,8 +8,9 @@ This is a coaching rule-of-thumb, not a physiological model: peak-week
 targets are drawn from widely-cited recreational-to-competitive running
 guidance (Runner's World / RRCA-style bands: 5K ~16-40km/wk, 10K ~40-48,
 half ~48-64, marathon ~48-97), picked toward the upper-middle of each band
-to match goal times in the sub-20 5K / sub-39 10K / sub-90 half range —
-solidly competitive-recreational, not beginner.
+for a competitive-recreational target rather than a beginner one. If that
+doesn't match your own level, adjust PEAK_WEEKLY_KM_BY_DISTANCE below —
+these are starting points, not a personalized model.
 
 Distance alone isn't the whole story, though: how hard you should be
 training for a given race depends on how much you're actually peaking for

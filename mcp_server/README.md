@@ -2,8 +2,10 @@
 
 ## Claude Desktop / Claude Code (local, works today)
 
-Add to your MCP config (`claude_desktop_config.json`, or `.mcp.json` for
-Claude Code):
+For Claude Code, copy `.mcp.json.example` to `.mcp.json` and fill in the
+real path (`.mcp.json` is gitignored — it's a local config, not something
+to commit, same as `.env`). For Claude Desktop, add the same thing to
+`claude_desktop_config.json`:
 
 ```json
 {

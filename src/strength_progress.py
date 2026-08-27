@@ -4,11 +4,13 @@ and recent PRs — shared by dashboard/generate_data.py and the MCP server's
 get_strength_progress tool.
 
 Session-level Push/Pull/Legs classification uses the workout's own title
-rather than inferring from muscle groups: this account's 112 logged Hevy
-sessions are titled "Push" (45x), "Pull" (44x), "Lower Body"/"Legs" (22x)
-with near-total consistency — a far more reliable signal than trying to
-bucket individual exercises by muscle group (RDL alone straddles hamstrings/
-glutes/lower_back, which don't map cleanly to a single PPL category).
+rather than inferring from muscle groups: if you consistently title Hevy
+sessions "Push"/"Pull"/"Legs" (or "Lower Body") already, that's a far more
+reliable signal than trying to bucket individual exercises by muscle group
+(RDL alone straddles hamstrings/glutes/lower_back, which don't map cleanly
+to a single PPL category). Check your own session titles against
+_ppl_category() below before relying on this — it won't work well if you
+don't already title sessions this way.
 
 1RM is estimated via the Epley formula (weight * (1 + reps/30)) from each
 session's best non-warmup set of a given exercise — Hevy computes its own
@@ -20,6 +22,9 @@ on its own.
 import json
 from datetime import date, timedelta
 
+# These are one athlete's personal picks, not a universal "core lifts"
+# list — swap in whichever exercise names you track most and want a 1RM
+# trend for (must match your own Hevy exercise titles exactly).
 CORE_LIFTS = [
     "Chest Press (Machine)",
     "Lat Pulldown (Cable)",

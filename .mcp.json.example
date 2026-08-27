@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "athlete-hub": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/athlete-hub", "mcp_server/server.py"]
+    }
+  }
+}
