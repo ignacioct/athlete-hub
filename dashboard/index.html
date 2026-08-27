@@ -198,6 +198,8 @@
   .empty { color: var(--text-dim); font-size: 13px; padding: 12px 4px; }
 
   canvas { max-width: 100%; }
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-wrap canvas { height: 100% !important; }
 
   .section-header {
     font-family: 'Space Grotesk', sans-serif;
@@ -326,12 +328,6 @@
     <canvas id="spo2Chart" height="80"></canvas>
   </div>
 
-  <!-- Body battery -->
-  <div class="panel span-12">
-    <div class="panel-label">Body battery <span>daily range, 180d</span></div>
-    <div class="chart-caption">Garmin's 0–100 energy-reserve estimate — drained by activity and stress, recharged by rest and sleep. Band shows the day's low to high.</div>
-    <canvas id="batteryChart" height="70"></canvas>
-  </div>
 
   <!-- ============ RUNNING ============ -->
   <div class="section-header section-running span-12">Running</div>
@@ -351,15 +347,15 @@
   <!-- Training load -->
   <div class="panel span-7">
     <div class="panel-label">Training load <span>CTL / ATL, 180d</span></div>
-    <div class="chart-caption">CTL (fitness): a ~6-week rolling average of training load — higher means more built-up endurance. ATL (fatigue): a ~1-week average — higher means more short-term fatigue. Their difference is the Readiness dial above.</div>
-    <canvas id="loadChart" height="90"></canvas>
+    <div class="chart-caption">CTL (fitness, ~6wk avg) vs. ATL (fatigue, ~1wk avg) — their difference is the Readiness dial above.</div>
+    <div class="chart-wrap"><canvas id="loadChart"></canvas></div>
   </div>
 
   <!-- Weekly running volume -->
   <div class="panel span-5">
     <div class="panel-label">Weekly running volume <span>km</span></div>
     <div class="chart-caption">Total running distance per calendar week (Mon–Sun).</div>
-    <canvas id="volumeChart" height="110"></canvas>
+    <div class="chart-wrap"><canvas id="volumeChart"></canvas></div>
   </div>
 
   <!-- VO2 max -->
@@ -542,13 +538,6 @@ function fmtHoursMin(seconds) {
   return `${h}h ${m.toString().padStart(2, '0')}m`;
 }
 
-function fmtBodyBattery(min, max) {
-  if (min == null && max == null) return null;
-  if (min == null) return `${Math.round(max)}`;
-  if (max == null) return `${Math.round(min)}`;
-  return `${Math.round(min)}–${Math.round(max)}`;
-}
-
 function mostRecentValue(daily, field) {
   for (let i = daily.length - 1; i >= 0; i--) {
     if (daily[i][field] != null) return daily[i][field];
@@ -565,7 +554,6 @@ const TREND_CONFIG = {
   stress_avg:       { higherIsBetter: false, label: 'pts',   fmtDelta: d => Math.round(Math.abs(d)) },
   vo2max_running:   { higherIsBetter: true,  label: '',      fmtDelta: d => Math.abs(d).toFixed(1), sparse: true },
   avg_respiration:  { higherIsBetter: false, label: 'br/min', fmtDelta: d => Math.abs(d).toFixed(1) },
-  avg_spo2:         { higherIsBetter: true,  label: '%',     fmtDelta: d => Math.abs(d).toFixed(1), sparse: true },
 };
 
 function computeTrend(daily, field) {
@@ -611,11 +599,9 @@ function renderTiles(daily) {
     ['Sleep score', latest.sleep_score, '', 'sleep_score'],
     ['Steps', latest.steps, '', 'steps'],
     ['Sleep duration', fmtHoursMin(latest.sleep_duration_s), '', 'sleep_duration_s'],
-    ['Body battery', fmtBodyBattery(latest.body_battery_min, latest.body_battery_max), '', null],
     ['Stress', latest.stress_avg, '', 'stress_avg'],
     ['VO2 max', mostRecentValue(daily, 'vo2max_running'), 'ml/kg/min', 'vo2max_running'],
     ['Respiration', mostRecentValue(daily, 'avg_respiration'), 'br/min', 'avg_respiration'],
-    ['Blood oxygen', mostRecentValue(daily, 'avg_spo2'), '%', 'avg_spo2'],
   ];
   document.getElementById('tiles').innerHTML = defs.map(([label, val, unit, field]) => `
     <div class="tile">
@@ -638,6 +624,7 @@ function renderLoadChart(daily) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
         x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
@@ -917,28 +904,6 @@ function renderSpo2Chart(daily) {
   });
 }
 
-function renderBatteryChart(daily) {
-  new Chart(document.getElementById('batteryChart'), {
-    type: 'line',
-    data: {
-      labels: daily.map(d => d.date),
-      datasets: [
-        { label: 'Min', data: daily.map(d => d.body_battery_min), borderColor: '#6FA46A88', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 1, spanGaps: true },
-        { label: 'Max', data: daily.map(d => d.body_battery_max), borderColor: '#6FA46A', backgroundColor: '#6FA46A22', fill: '-1', tension: 0.3, pointRadius: 0, borderWidth: 1.5, spanGaps: true },
-      ]
-    },
-    options: {
-      responsive: true,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
-        y: { min: 0, max: 100, grid: { color: '#2B2E35' } }
-      },
-      plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
-    }
-  });
-}
-
 function renderVo2Chart(history) {
   // history is already non-null-only readings (see generate_data.py) over
   // a full year, independent of the dashboard's shared 180-day window —
@@ -993,6 +958,7 @@ function renderVolumeChart(activities) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: '#2B2E35' } } },
       plugins: { legend: { display: false } }
     }
@@ -1090,7 +1056,6 @@ function renderOneRMChart(coreLifts) {
   renderRhrChart(daily);
   renderRespirationChart(daily);
   renderSpo2Chart(daily);
-  renderBatteryChart(daily);
   renderLoadChart(daily);
   renderVolumeChart(data.activities || []);
   renderVo2Chart(data.vo2max_history || []);
