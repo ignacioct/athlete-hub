@@ -205,6 +205,12 @@
   .chart-wrap { position: relative; height: 220px; }
   .chart-wrap canvas { height: 100% !important; }
 
+  /* --- stretch a row's items to equal height, and stack panels within one --- */
+  .stretch-row-item { align-self: stretch; }
+  .stacked-col { display: flex; flex-direction: column; gap: 16px; }
+  .stacked-col > .panel:last-child { flex: 1 1 auto; display: flex; flex-direction: column; }
+  .chart-wrap-flex { flex: 1 1 auto; height: auto; min-height: 150px; }
+
   .section-header {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 15px;
@@ -337,30 +343,30 @@
   <div class="section-header section-running span-12">Running</div>
 
   <!-- Race calendar -->
-  <div class="panel span-5">
+  <div class="panel span-5 stretch-row-item">
     <div class="panel-label">Upcoming races</div>
     <div class="chart-caption">Current vs. peak-week running volume — a coaching rule of thumb by distance, scaled down for B/C-priority races since you're not specifically peaking for those. Not personalized beyond that.</div>
     <div id="races"></div>
   </div>
 
-  <!-- This week's workouts -->
-  <div class="panel span-7">
-    <div class="panel-label">This week's workouts <span>planned vs. actual</span></div>
-    <div id="weekly-workouts"></div>
+  <!-- This week's workouts + Weekly running volume, stacked to match races' height -->
+  <div class="span-7 stretch-row-item stacked-col">
+    <div class="panel">
+      <div class="panel-label">This week's workouts <span>planned vs. actual</span></div>
+      <div id="weekly-workouts"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Weekly running volume <span>km</span></div>
+      <div class="chart-caption">Total running distance per calendar week (Mon–Sun).</div>
+      <div class="chart-wrap chart-wrap-flex"><canvas id="volumeChart"></canvas></div>
+    </div>
   </div>
 
   <!-- Training load -->
-  <div class="panel span-7">
+  <div class="panel span-12">
     <div class="panel-label">Training load <span>CTL / ATL, 180d</span></div>
     <div class="chart-caption">CTL (fitness, ~6wk avg) vs. ATL (fatigue, ~1wk avg) — their difference is the Readiness dial above.</div>
     <div class="chart-wrap"><canvas id="loadChart"></canvas></div>
-  </div>
-
-  <!-- Weekly running volume -->
-  <div class="panel span-5">
-    <div class="panel-label">Weekly running volume <span>km</span></div>
-    <div class="chart-caption">Total running distance per calendar week (Mon–Sun).</div>
-    <div class="chart-wrap"><canvas id="volumeChart"></canvas></div>
   </div>
 
   <!-- VO2 max -->
