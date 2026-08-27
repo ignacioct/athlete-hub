@@ -12,7 +12,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.activities import get_deduped_activities  # noqa: E402
 from src.db import get_conn, init_db  # noqa: E402
+from src.race_readiness import race_readiness  # noqa: E402
 from src.strength_progress import core_lift_1rm_history, recent_prs, weekly_split_status  # noqa: E402
 from src.weekly_workouts import get_weekly_workouts  # noqa: E402
 
@@ -24,27 +26,7 @@ def main(days_back: int = 180) -> None:
     oldest = (date.today() - timedelta(days=days_back)).isoformat()
 
     with get_conn() as conn:
-        activities = [
-            dict(r)
-            for r in conn.execute(
-                """
-                SELECT source, sport, name, start_time_utc, duration_s, distance_m,
-                       avg_hr, training_load
-                FROM activities
-                WHERE start_time_utc >= ? AND is_strength_duplicate = 0
-                  AND NOT (
-                      source = 'garmin'
-                      AND EXISTS (
-                          SELECT 1 FROM activities a2
-                          WHERE a2.source = 'intervals'
-                            AND ABS(strftime('%s', a2.start_time_utc) - strftime('%s', activities.start_time_utc)) < 600
-                      )
-                  )
-                ORDER BY start_time_utc ASC
-                """,
-                (oldest,),
-            ).fetchall()
-        ]
+        activities = [dict(r) for r in get_deduped_activities(conn, oldest)]
 
         daily = [
             dict(r)
@@ -55,6 +37,8 @@ def main(days_back: int = 180) -> None:
         ]
 
         races = [dict(r) for r in conn.execute("SELECT * FROM races WHERE status = 'upcoming' ORDER BY date ASC").fetchall()]
+        for r in races:
+            r["readiness"] = race_readiness(conn, r)
 
         weekly_workouts = get_weekly_workouts(conn, date.today())
 

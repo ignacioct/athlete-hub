@@ -133,6 +133,10 @@
   .race-date { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
   .race-days { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; text-align: right; }
   .race-days .unit { font-size: 10px; color: var(--text-dim); display: block; text-transform: uppercase; }
+  .readiness-row { margin-top: 8px; }
+  .readiness-text { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+  .readiness-bar-track { background: var(--panel-2); border-radius: var(--radius); height: 6px; overflow: hidden; }
+  .readiness-bar-fill { height: 100%; background: var(--run); }
   .badge {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
@@ -335,6 +339,7 @@
   <!-- Race calendar -->
   <div class="panel span-5">
     <div class="panel-label">Upcoming races</div>
+    <div class="chart-caption">Current vs. peak-week running volume — a coaching rule of thumb by distance, scaled down for B/C-priority races since you're not specifically peaking for those. Not personalized beyond that.</div>
     <div id="races"></div>
   </div>
 
@@ -444,6 +449,18 @@ function drawDial(form) {
   document.getElementById('dial-value').textContent = (form === null || form === undefined) ? '—' : (form > 0 ? '+' : '') + form.toFixed(1);
 }
 
+function renderReadiness(readiness) {
+  if (!readiness) return '';
+  const { current_weekly_km, target_peak_weekly_km, pct_of_target, weeks_to_race } = readiness;
+  const barPct = Math.min(100, pct_of_target);
+  return `
+    <div class="readiness-row">
+      <div class="readiness-text">${current_weekly_km} / ${target_peak_weekly_km} km/wk peak target (${pct_of_target}%) · ${weeks_to_race}w to go</div>
+      <div class="readiness-bar-track"><div class="readiness-bar-fill" style="width:${barPct}%"></div></div>
+    </div>
+  `;
+}
+
 function renderRaces(races) {
   const el = document.getElementById('races');
   if (!races || races.length === 0) {
@@ -457,6 +474,7 @@ function renderRaces(races) {
         <span class="badge badge-${r.priority || 'B'}">${r.priority || 'B'}</span>
         <span class="race-name">${r.name}</span><br>
         <span class="race-date">${r.date}${r.distance_km ? ' · ' + r.distance_km + ' km' : ''}${r.goal_time ? ' · goal ' + r.goal_time : ''}</span>
+        ${renderReadiness(r.readiness)}
       </div>
       <div class="race-days">${daysBetween(today, r.date)}<span class="unit">days</span></div>
     </div>

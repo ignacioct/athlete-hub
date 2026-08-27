@@ -17,8 +17,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from mcp.server.mcpserver import MCPServer
 
 from scripts.sync_all import main as run_sync_all
+from src.activities import get_deduped_activities
 from src.db import get_conn, init_db
 from src.intervals_sync import push_workout
+from src.race_readiness import race_readiness
 from src.races import add_race, list_races, update_race_status
 from src.strength_progress import core_lift_1rm_history, recent_prs, weekly_split_status
 from src.weekly_workouts import get_weekly_workouts as _get_weekly_workouts
@@ -64,29 +66,8 @@ def get_activities(start_date: str, end_date: str, sport: str | None = None) -> 
     intervals.icu's copy carries training-load data Garmin's doesn't.
     """
     init_db()
-    query = """
-        SELECT id, source, sport, name, start_time_utc, duration_s, distance_m,
-               avg_hr, max_hr, calories, elevation_gain_m, avg_pace_s_per_km, training_load
-        FROM activities
-        WHERE start_time_utc >= ? AND start_time_utc <= ?
-          AND is_strength_duplicate = 0
-          AND NOT (
-              source = 'garmin'
-              AND EXISTS (
-                  SELECT 1 FROM activities a2
-                  WHERE a2.source = 'intervals'
-                    AND ABS(strftime('%s', a2.start_time_utc) - strftime('%s', activities.start_time_utc)) < 600
-              )
-          )
-    """
-    params = [start_date, end_date + "T23:59:59"]
-    if sport:
-        query += " AND sport = ?"
-        params.append(sport)
-    query += " ORDER BY start_time_utc DESC"
-
     with get_conn() as conn:
-        rows = conn.execute(query, params).fetchall()
+        rows = get_deduped_activities(conn, start_date, end_date + "T23:59:59", sport=sport, desc=True)
         return [dict(r) for r in rows]
 
 
@@ -195,8 +176,22 @@ def get_weekly_workouts() -> list[dict]:
 
 @mcp.tool()
 def get_race_calendar(status: str = "upcoming") -> list[dict]:
-    """Get races. status is 'upcoming' (default), 'done', or 'cancelled'."""
-    return list_races(status)
+    """
+    Get races. status is 'upcoming' (default), 'done', or 'cancelled'.
+
+    Each race includes a `readiness` dict (None if it has no distance_km to
+    size a target from): current_weekly_km (trailing 4-week average running
+    volume, excluding the current partial week), target_peak_weekly_km (a
+    coaching rule-of-thumb peak-week target for that race's distance,
+    scaled by its A/B/C priority — see src/race_readiness.py for the exact
+    bands and reasoning), pct_of_target, and weeks_to_race.
+    """
+    races = list_races(status)
+    if status == "upcoming":
+        with get_conn() as conn:
+            for r in races:
+                r["readiness"] = race_readiness(conn, r)
+    return races
 
 
 @mcp.tool()
