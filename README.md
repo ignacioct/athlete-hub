@@ -128,6 +128,20 @@ exposing your health data to the internet:
   tier that supports private Pages — don't publish `dashboard/data.json`
   from a public repo, it contains your health data.
 
+**Status:** Tailscale is set up and works for reaching the dashboard from a
+phone browser — the sync machine and phone are on the same tailnet, and
+`dashboard/server.py` already binds to all interfaces, so no code changes
+were needed for that part.
+
+Claude's mobile/web app is a separate problem, though: custom connectors are
+called from Anthropic's cloud infrastructure, not from your phone, so
+Tailscale-only access doesn't work for the MCP server — it needs to be
+reachable from the public internet (`Tailscale Funnel`), which also means it
+needs real authentication first, since `mcp_server/server.py` currently has
+none. That work (a bearer-token `TokenVerifier` + `AuthSettings`, switching
+to `transport="streamable-http"`, then funneling it) was started and paused
+on the `feature/mobile-mcp-access` branch.
+
 ## What's genuinely fragile here
 
 - Garmin sync: unofficial, can break on Garmin's schedule, and running it
