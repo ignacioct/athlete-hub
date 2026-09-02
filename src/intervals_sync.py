@@ -220,9 +220,15 @@ def push_workout(name: str, date_local: str, sport_type: str, description: str, 
     calendar. If Garmin is connected there with "Upload planned workouts"
     ticked, this shows up on the watch automatically.
 
-    description supports intervals.icu's structured workout syntax, e.g.:
-        "Warmup 10m Z2\n6x(4m Z4, 3m Z2)\nCooldown 10m Z2"
-    Plain text also works, it just won't have structured steps/targets.
+    description supports intervals.icu's structured workout syntax. Every step
+    line MUST start with "- " (dash space), running pace zones must say
+    "Z2 Pace" (not just "Z2", or it's read as a power zone and fails to
+    parse), "m" means minutes (use "mtr" for meters), and repeat blocks need
+    a blank line before and after, e.g.:
+        "- Warmup 10m Z2 Pace\n\nMain Set 6x\n- 4m Z4 Pace\n- 3m Z2 Pace\n\n- Cooldown 10m Z2 Pace"
+    Plain text (no leading "- ") also works, it just won't have structured
+    steps/targets — confirmed empirically 2 Sep 2026 after several failed
+    attempts without the dash prefix and "Pace" keyword.
     """
     payload = {
         "category": "WORKOUT",

@@ -235,11 +235,15 @@ def create_workout(name: str, date: str, sport_type: str, description: str) -> d
         name: short workout title, e.g. "Threshold intervals"
         date: YYYY-MM-DD, when the workout is scheduled
         sport_type: 'Run', 'Ride', 'WeightTraining', etc. (intervals.icu sport type)
-        description: workout description. For structured steps, use
-            intervals.icu's syntax, e.g.:
-                "Warmup 15m Z2\\n6x(3m Z4, 2m Z1)\\nCooldown 10m Z1"
-            Plain text also works but won't have structured pace/HR targets
-            your watch can guide you through.
+        description: workout description. For structured steps (needed for
+            on-device pace-target guidance/autolap), every step line MUST
+            start with "- " (dash space), running pace zones must say
+            "Z2 Pace" (not just "Z2" — that's read as a power zone and fails
+            to parse), "m" means minutes (use "mtr" for meters, not "m"),
+            and repeat blocks need a blank line before and after, e.g.:
+                "- Warmup 15m Z2 Pace\\n\\nMain Set 6x\\n- 3m Z4 Pace\\n- 2m Z1 Pace\\n\\n- Cooldown 10m Z1 Pace"
+            Plain text (no leading "- ") also works but won't have
+            structured pace/HR targets your watch can guide you through.
     """
     result = push_workout(name, date, sport_type, description)
     return {"intervals_event_id": result.get("id"), "status": "created"}

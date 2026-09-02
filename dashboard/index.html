@@ -286,14 +286,14 @@
   <!-- Recovery score -->
   <div class="panel span-12">
     <div class="panel-label">Recovery <span id="recovery-label">180d</span></div>
-    <div class="chart-caption">Approximate, not Whoop's algorithm: 40% HRV vs. 30-day baseline + 30% resting HR vs. baseline (lower is better) + 30% sleep score.</div>
+    <div class="chart-caption">A same-morning readiness score, not a running "how tired am I" tally — it's how well your body bounced back overnight, from this morning's HRV, resting HR, and sleep vs. your own 30-day baseline (40%/30%/30% weighting). Approximate, not Whoop's algorithm. 0-100: ≥67 (green) is high — you're reading better than your own baseline, there's capacity to take on a normal or hard day. 34-66 (amber) is moderate — nothing's off, but there's no extra in the tank either. &lt;34 (red) is low — one or more inputs are meaningfully worse than baseline, favor an easy or rest day, especially if it's been trending down for several days rather than a single dip.</div>
     <canvas id="recoveryChart" height="60"></canvas>
   </div>
 
   <!-- Strain score -->
   <div class="panel span-12">
     <div class="panel-label">Strain <span id="strain-label">180d</span></div>
-    <div class="chart-caption">A rough Whoop-Strain-style 0–21 daily load score, derived from that day's total Garmin/intervals.icu training load — not continuous heart rate, which this repo doesn't have access to, so a true rest day shows 0 here (unlike real Whoop's small non-zero baseline). Hevy strength sessions don't carry a comparable load score yet, so lifting-only days currently show 0 too — a gap, not a sign nothing happened.</div>
+    <div class="chart-caption">The training stress you actually put on your body that day — not a feeling of tiredness. It's a rough Whoop-Strain-style 0–21 score derived from that day's total Garmin/intervals.icu training load: a hard workout scores high strain regardless of how tired you subjectively felt doing it. Not continuous heart rate, which this repo doesn't have access to, so a true rest day shows 0 here (unlike real Whoop's small non-zero baseline). Hevy strength sessions don't carry a comparable load score yet, so lifting-only days currently show 0 too — a gap, not a sign nothing happened. 0-21: ≥14 (red) is a hard day's worth of load, 7-13 (amber) is moderate, &lt;7 (blue) is easy or rest. Read it as spending against Recovery's balance: Recovery is how much capacity you had going into the day, Strain is how much of it you spent — high strain is expected and fine when Recovery was high; the combination worth acting on is high strain stacked on top of Recovery that was already amber or red.</div>
     <canvas id="strainChart" height="60"></canvas>
   </div>
 
