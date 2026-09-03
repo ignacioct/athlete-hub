@@ -250,6 +250,17 @@
   }
   .sync-btn:hover:not(:disabled) { border-color: var(--run); color: var(--run); }
   .sync-btn:disabled { opacity: 0.6; cursor: default; }
+  .sync-wrap { position: relative; }
+  .sync-progress {
+    position: absolute;
+    left: 1px; right: 1px; bottom: 1px;
+    height: 2px;
+    width: 0%;
+    background: var(--run);
+    border-radius: 0 0 var(--radius) var(--radius);
+    transition: width 0.4s linear;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -258,7 +269,10 @@
   <h1>athlete-hub <span>/ training console</span></h1>
   <div class="header-right">
     <div class="meta" id="generated-at">— loading —</div>
-    <button class="sync-btn" id="sync-btn">Sync now</button>
+    <div class="sync-wrap">
+      <button class="sync-btn" id="sync-btn">Sync now</button>
+      <div class="sync-progress" id="sync-progress"></div>
+    </div>
   </div>
 </header>
 
@@ -411,7 +425,7 @@ Chart.defaults.borderColor = '#2B2E35';
 
 async function loadData() {
   try {
-    const res = await fetch('data.json');
+    const res = await fetch('data.json', { cache: 'no-store' });
     if (!res.ok) throw new Error('no data.json yet');
     return await res.json();
   } catch (e) {
@@ -1091,12 +1105,27 @@ function renderOneRMChart(coreLifts) {
 
 document.getElementById('sync-btn').addEventListener('click', async () => {
   const btn = document.getElementById('sync-btn');
+  const bar = document.getElementById('sync-progress');
+  const EST_S = 45; // typical observed sync duration; real one can run longer
+  const startedAt = Date.now();
   btn.disabled = true;
-  btn.textContent = 'Syncing…';
+
+  const tick = () => {
+    const elapsedS = Math.round((Date.now() - startedAt) / 1000);
+    btn.textContent = `Syncing… ${elapsedS}s`;
+    // Fill toward 100% over EST_S, but never fully claim done before we hear back.
+    const pct = Math.min(95, (elapsedS / EST_S) * 100);
+    bar.style.width = pct + '%';
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+
   try {
     const res = await fetch('/api/sync', { method: 'POST' });
     const result = await res.json();
+    clearInterval(timer);
     if (result.ok) {
+      bar.style.width = '100%';
       btn.textContent = 'Synced ✓';
       location.reload();
       return;
@@ -1104,9 +1133,11 @@ document.getElementById('sync-btn').addEventListener('click', async () => {
     console.error('sync failed:', result.output);
     btn.textContent = 'Sync failed';
   } catch (e) {
+    clearInterval(timer);
     console.error('sync request failed:', e);
     btn.textContent = 'Sync failed (server running?)';
   }
+  bar.style.width = '0%';
   setTimeout(() => { btn.disabled = false; btn.textContent = 'Sync now'; }, 4000);
 });
 </script>
