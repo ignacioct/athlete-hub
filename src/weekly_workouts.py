@@ -14,23 +14,51 @@ def week_bounds(today: date) -> tuple[str, str]:
     return monday.isoformat(), sunday.isoformat()
 
 
-def _best_activity_match(conn, day: str):
+_SPORT_CATEGORIES = {
+    "running": "running", "treadmill_running": "running", "run": "running", "virtualrun": "running",
+    "hiking": "hiking", "hike": "hiking",
+    "walking": "walking", "walk": "walking",
+    "strength_training": "strength", "weighttraining": "strength",
+    "cycling": "cycling", "ride": "cycling", "virtualride": "cycling",
+}
+
+
+def _sport_category(raw: str | None) -> str | None:
+    if not raw:
+        return None
+    return _SPORT_CATEGORIES.get(raw.lower(), raw.lower())
+
+
+def _best_activity_match(conn, day: str, planned_sport: str | None = None):
     """The day's most significant logged activity, if any. Prefers
     intervals.icu's copy (richer/deduped, same reasoning as get_activities'
     dedup) and, among same-day activities (e.g. a run plus incidental
     walks), prefers the one with the highest training load — the real
-    session, not a walk to the shops."""
-    row = conn.execute(
+    session, not a walk to the shops.
+
+    When planned_sport is given, only an activity of a matching sport
+    category counts as fulfilling that plan — e.g. a Push strength
+    session logged on a planned running day must not mark the run
+    'done'. Unplanned days (planned_sport=None) keep the old
+    sport-agnostic behavior, since there's no plan to match against."""
+    rows = conn.execute(
         """
         SELECT source, name, sport, duration_s, distance_m, avg_hr, avg_pace_s_per_km, training_load
         FROM activities
         WHERE date(start_time_utc) = ? AND is_strength_duplicate = 0
         ORDER BY (source = 'intervals') DESC, COALESCE(training_load, -1) DESC
-        LIMIT 1
         """,
         (day,),
-    ).fetchone()
-    return dict(row) if row else None
+    ).fetchall()
+    if not rows:
+        return None
+    if planned_sport is None:
+        return dict(rows[0])
+    wanted = _sport_category(planned_sport)
+    for row in rows:
+        if _sport_category(row["sport"]) == wanted:
+            return dict(row)
+    return None
 
 
 def get_weekly_workouts(conn, today: date) -> list[dict]:
@@ -59,7 +87,7 @@ def get_weekly_workouts(conn, today: date) -> list[dict]:
     while d <= end:
         d_str = d.isoformat()
         plan = planned_by_date.get(d_str)
-        actual = _best_activity_match(conn, d_str)
+        actual = _best_activity_match(conn, d_str, plan["sport"] if plan else None)
 
         if plan:
             entry = plan

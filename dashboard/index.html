@@ -411,7 +411,7 @@
     <div class="panel-label">Estimated 1RM <span>core lifts</span></div>
     <div class="chart-caption">Best non-warmup set each session, converted via the Epley formula — an estimate, not a tested max.</div>
     <div id="core-lifts-empty"></div>
-    <canvas id="oneRMChart" height="70"></canvas>
+    <div class="chart-wrap" style="height: 320px"><canvas id="oneRMChart"></canvas></div>
   </div>
 
 </div>
@@ -1068,6 +1068,7 @@ function renderOneRMChart(coreLifts) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { grid: { color: '#2B2E35' }, title: { display: true, text: 'kg', color: '#83868C' } } },
       plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { family: FONT, size: 10 } } } }
     }
