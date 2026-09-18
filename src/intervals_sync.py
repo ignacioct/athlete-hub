@@ -99,6 +99,7 @@ def pull_planned_workouts_to_db(weeks_ahead: int = 2) -> int:
                 VALUES (?, 'intervals', ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
+                    date = excluded.date,
                     sport = excluded.sport,
                     description = excluded.description,
                     raw_json = excluded.raw_json,

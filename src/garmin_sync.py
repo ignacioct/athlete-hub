@@ -287,6 +287,7 @@ def _upsert_planned_workout(conn, r: dict) -> None:
         ) VALUES (?, 'garmin_club', ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
+            date = excluded.date,
             sport = excluded.sport,
             is_rest_day = excluded.is_rest_day,
             estimated_duration_s = excluded.estimated_duration_s,
