@@ -154,13 +154,14 @@ def get_strength_progress() -> dict:
 @mcp.tool()
 def get_weekly_workouts() -> list[dict]:
     """
-    Get every day of this week (Monday-Sunday), combining planned workouts
-    with whatever was actually logged that day.
+    Get every day of this week (Monday-Sunday), combining planned runs
+    with running activities logged that day.
 
-    Planned workouts come from two sources: your running club's
+    Planned runs come from two sources: your running club's
     TrainingPeaks -> Garmin schedule (source='garmin_club'), and anything
-    created here via create_workout (source='intervals'). A day with no
-    plan but a real logged activity still shows up (source='unplanned') —
+    created here via create_workout (source='intervals'). Non-running plans
+    and activities are omitted. A day with no plan but a logged run still
+    shows up (source='unplanned') —
     this covers every day, not just planned ones. Each item has a status:
     'done' (something was logged, planned or not), 'missed' (date has
     passed with nothing logged), 'today', 'upcoming', or 'rest'. When done,

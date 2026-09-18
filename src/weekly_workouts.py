@@ -1,6 +1,6 @@
 """
 Day-by-day view of the current week (Monday-Sunday), combining planned
-workouts with whatever was actually logged — shared by dashboard/generate_data.py
+runs with logged running activities — shared by dashboard/generate_data.py
 and mcp_server/server.py's get_weekly_workouts tool so the two can't drift
 out of sync with each other.
 """
@@ -39,8 +39,7 @@ def _best_activity_match(conn, day: str, planned_sport: str | None = None):
     When planned_sport is given, only an activity of a matching sport
     category counts as fulfilling that plan — e.g. a Push strength
     session logged on a planned running day must not mark the run
-    'done'. Unplanned days (planned_sport=None) keep the old
-    sport-agnostic behavior, since there's no plan to match against."""
+    'done'."""
     rows = conn.execute(
         """
         SELECT source, name, sport, duration_s, distance_m, avg_hr, avg_pace_s_per_km, training_load
@@ -62,10 +61,9 @@ def _best_activity_match(conn, day: str, planned_sport: str | None = None):
 
 
 def get_weekly_workouts(conn, today: date) -> list[dict]:
-    """Combines planned workouts (club's Garmin schedule + anything created
-    via create_workout) with actual activities for every day this week —
-    including days with no plan at all, so a real unplanned run still shows
-    up rather than only appearing when it happens to match a planned entry."""
+    """Combines planned runs (club's Garmin schedule + anything created via
+    create_workout) with actual runs for every day this week — including
+    days with no plan, so a real unplanned run still appears."""
     week_start, week_end = week_bounds(today)
     today_str = today.isoformat()
 
@@ -79,6 +77,7 @@ def get_weekly_workouts(conn, today: date) -> list[dict]:
             """,
             (week_start, week_end),
         ).fetchall()
+        if _sport_category(r["sport"]) == "running"
     }
 
     result = []
@@ -87,7 +86,7 @@ def get_weekly_workouts(conn, today: date) -> list[dict]:
     while d <= end:
         d_str = d.isoformat()
         plan = planned_by_date.get(d_str)
-        actual = _best_activity_match(conn, d_str, plan["sport"] if plan else None)
+        actual = _best_activity_match(conn, d_str, plan["sport"] if plan else "running")
 
         if plan:
             entry = plan
