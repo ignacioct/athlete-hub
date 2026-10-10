@@ -1,0 +1,593 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T09:56:11+00:00",
+  "title": "Design System: athlete-hub",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Map Paper",
+        "tonalRamp": [
+          "#1B1B1A",
+          "#474743",
+          "#66665F",
+          "#9A9A92",
+          "#C9C9C1",
+          "#DDDDD6",
+          "#F2F2EE",
+          "#FFFFFF"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "#1B1B1A",
+          "#2E2E2C",
+          "#474743",
+          "#66665F",
+          "#9A9A92",
+          "#C9C9C1",
+          "#DDDDD6",
+          "#F2F2EE"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "#1B1B1A",
+          "#2E2E2C",
+          "#474743",
+          "#66665F",
+          "#9A9A92",
+          "#C9C9C1",
+          "#DDDDD6",
+          "#F2F2EE"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "tonalRamp": [
+          "#1B1B1A",
+          "#2E2E2C",
+          "#474743",
+          "#66665F",
+          "#9A9A92",
+          "#C9C9C1",
+          "#DDDDD6",
+          "#F2F2EE"
+        ]
+      },
+      "hair": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "tonalRamp": [
+          "#1B1B1A",
+          "#2E2E2C",
+          "#474743",
+          "#66665F",
+          "#9A9A92",
+          "#C9C9C1",
+          "#DDDDD6",
+          "#F2F2EE"
+        ]
+      },
+      "forest": {
+        "role": "primary",
+        "displayName": "Runnable-Forest Green",
+        "tonalRamp": [
+          "#123A19",
+          "#1D5A28",
+          "#2C7A3A",
+          "#4FA35E",
+          "#8CC796",
+          "#B9DDBE",
+          "#C6DFC8",
+          "#EAF4EA"
+        ]
+      },
+      "forest-ink": {
+        "role": "primary",
+        "displayName": "Forest Ink",
+        "tonalRamp": [
+          "#123A19",
+          "#1D5A28",
+          "#2C7A3A",
+          "#4FA35E",
+          "#8CC796",
+          "#B9DDBE",
+          "#C6DFC8",
+          "#EAF4EA"
+        ]
+      },
+      "forest-field": {
+        "role": "primary",
+        "displayName": "Forest Field",
+        "tonalRamp": [
+          "#123A19",
+          "#1D5A28",
+          "#2C7A3A",
+          "#4FA35E",
+          "#8CC796",
+          "#B9DDBE",
+          "#C6DFC8",
+          "#EAF4EA"
+        ]
+      },
+      "forest-hair": {
+        "role": "primary",
+        "displayName": "Forest Hair",
+        "tonalRamp": [
+          "#123A19",
+          "#1D5A28",
+          "#2C7A3A",
+          "#4FA35E",
+          "#8CC796",
+          "#B9DDBE",
+          "#C6DFC8",
+          "#EAF4EA"
+        ]
+      },
+      "contour": {
+        "role": "secondary",
+        "displayName": "Contour Brown",
+        "tonalRamp": [
+          "#4A2309",
+          "#76380F",
+          "#A4521F",
+          "#C27747",
+          "#E3B593",
+          "#E5CDBB",
+          "#F0DDCF",
+          "#F7ECE3"
+        ]
+      },
+      "contour-ink": {
+        "role": "secondary",
+        "displayName": "Contour Ink",
+        "tonalRamp": [
+          "#4A2309",
+          "#76380F",
+          "#A4521F",
+          "#C27747",
+          "#E3B593",
+          "#E5CDBB",
+          "#F0DDCF",
+          "#F7ECE3"
+        ]
+      },
+      "contour-field": {
+        "role": "secondary",
+        "displayName": "Contour Field",
+        "tonalRamp": [
+          "#4A2309",
+          "#76380F",
+          "#A4521F",
+          "#C27747",
+          "#E3B593",
+          "#E5CDBB",
+          "#F0DDCF",
+          "#F7ECE3"
+        ]
+      },
+      "contour-hair": {
+        "role": "secondary",
+        "displayName": "Contour Hair",
+        "tonalRamp": [
+          "#4A2309",
+          "#76380F",
+          "#A4521F",
+          "#C27747",
+          "#E3B593",
+          "#E5CDBB",
+          "#F0DDCF",
+          "#F7ECE3"
+        ]
+      },
+      "water": {
+        "role": "tertiary",
+        "displayName": "Water Blue",
+        "tonalRamp": [
+          "#0E3D66",
+          "#144C80",
+          "#1E6BB0",
+          "#3F88C9",
+          "#5FA5DE",
+          "#C3D8EC",
+          "#D6E5F3",
+          "#E7F0F9"
+        ]
+      },
+      "water-ink": {
+        "role": "tertiary",
+        "displayName": "Water Ink",
+        "tonalRamp": [
+          "#0E3D66",
+          "#144C80",
+          "#1E6BB0",
+          "#3F88C9",
+          "#5FA5DE",
+          "#C3D8EC",
+          "#D6E5F3",
+          "#E7F0F9"
+        ]
+      },
+      "water-field": {
+        "role": "tertiary",
+        "displayName": "Water Field",
+        "tonalRamp": [
+          "#0E3D66",
+          "#144C80",
+          "#1E6BB0",
+          "#3F88C9",
+          "#5FA5DE",
+          "#C3D8EC",
+          "#D6E5F3",
+          "#E7F0F9"
+        ]
+      },
+      "water-hair": {
+        "role": "tertiary",
+        "displayName": "Water Hair",
+        "tonalRamp": [
+          "#0E3D66",
+          "#144C80",
+          "#1E6BB0",
+          "#3F88C9",
+          "#5FA5DE",
+          "#C3D8EC",
+          "#D6E5F3",
+          "#E7F0F9"
+        ]
+      },
+      "open": {
+        "role": "reserved",
+        "displayName": "Open-Land Yellow (today only)",
+        "tonalRamp": [
+          "#6B4E06",
+          "#9C740E",
+          "#C99A1E",
+          "#F6C343",
+          "#F9D573",
+          "#FBE3A0",
+          "#FDEDBF",
+          "#FFF5D6"
+        ]
+      },
+      "open-field": {
+        "role": "reserved",
+        "displayName": "Open Field (today only)",
+        "tonalRamp": [
+          "#6B4E06",
+          "#9C740E",
+          "#C99A1E",
+          "#F6C343",
+          "#F9D573",
+          "#FBE3A0",
+          "#FDEDBF",
+          "#FFF5D6"
+        ]
+      },
+      "overprint": {
+        "role": "reserved",
+        "displayName": "Course Overprint Purple (races only)",
+        "tonalRamp": [
+          "#4A1039",
+          "#721C5A",
+          "#A92D86",
+          "#C25BA3",
+          "#D78BC0",
+          "#E8B8DA",
+          "#F0D2E7",
+          "#F7E6F1"
+        ]
+      },
+      "overprint-field": {
+        "role": "reserved",
+        "displayName": "Overprint Field (races only)",
+        "tonalRamp": [
+          "#4A1039",
+          "#721C5A",
+          "#A92D86",
+          "#C25BA3",
+          "#D78BC0",
+          "#E8B8DA",
+          "#F0D2E7",
+          "#F7E6F1"
+        ]
+      },
+      "good": {
+        "role": "state",
+        "displayName": "Good",
+        "tonalRamp": [
+          "#123A19",
+          "#1D5A28",
+          "#2C7A3A",
+          "#4FA35E",
+          "#8CC796",
+          "#B9DDBE",
+          "#C6DFC8",
+          "#EAF4EA"
+        ]
+      },
+      "warn": {
+        "role": "state",
+        "displayName": "Warn (burnt amber)",
+        "tonalRamp": [
+          "#4D2F05",
+          "#7A4B08",
+          "#A3640B",
+          "#C77A0E",
+          "#DD9E4A",
+          "#EBC28C",
+          "#F4DCBA",
+          "#FBF0E1"
+        ]
+      },
+      "bad": {
+        "role": "state",
+        "displayName": "Bad",
+        "tonalRamp": [
+          "#4A140F",
+          "#7A2019",
+          "#A12C23",
+          "#C2362B",
+          "#D66A61",
+          "#E69C96",
+          "#F2C7C3",
+          "#FBEDEC"
+        ]
+      },
+      "rest": {
+        "role": "state",
+        "displayName": "Rest Grey",
+        "tonalRamp": [
+          "#2E2E2C",
+          "#474743",
+          "#66665F",
+          "#9A9A92",
+          "#B5B5AD",
+          "#C9C9C1",
+          "#DDDDD6",
+          "#F2F2EE"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Recovery, the one hero figure (72px under 860px)."
+      },
+      "display-mid": {
+        "displayName": "Display Mid",
+        "purpose": "Form, the second hero figure (52px under 860px)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Primary Today tile values."
+      },
+      "section-title": {
+        "displayName": "Section Title",
+        "purpose": "White title on Health/Run/Gym section bands."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel and lead-block headings, followed by inline meta."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text; tabular figures on."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Disclosure captions, max 75ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Tile labels, tab labels."
+      },
+      "axis": {
+        "displayName": "Axis",
+        "purpose": "Chart ticks, sparkline and strip axes, legend keys at 600."
+      },
+      "status": {
+        "displayName": "Status",
+        "purpose": "Uppercase week-strip state words with inline check/cross."
+      },
+      "control-code": {
+        "displayName": "Control Code",
+        "purpose": "Race codes C1/A1/B1 inside control circles."
+      }
+    },
+    "shadows": [
+      {
+        "name": "today-rule",
+        "value": "inset 0 4px 0 #F6C343",
+        "purpose": "Drawn 4px open-yellow top rule on today's week-strip day. A line, not elevation."
+      },
+      {
+        "name": "finish-ring",
+        "value": "0 0 0 2px #FFFFFF, 0 0 0 4.5px #A92D86",
+        "purpose": "Outer ring of the finish control (double circle). A map symbol, not elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease-out",
+        "purpose": "Tab brightness, sync button inversion, (i) disclosure fill."
+      },
+      {
+        "name": "sync-progress",
+        "value": "width 0.4s linear",
+        "purpose": "Sync progress rule growth."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition: none; scroll-behavior: auto",
+        "purpose": "Applied under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "lead-stack",
+        "value": "1100px"
+      },
+      {
+        "name": "single-column",
+        "value": "860px"
+      },
+      {
+        "name": "compact-header",
+        "value": "520px"
+      }
+    ],
+    "charts": {
+      "renderer": "Chart.js 4.4.4",
+      "font": "Barlow 12px, ink-3",
+      "xAxis": "ink baseline, no gridlines, maxTicksLimit 8, no rotation",
+      "yAxis": "hairline grid #E6E6E0 (see drift note), no border",
+      "rawSeries": "1px line at 40% alpha, 8% alpha fill",
+      "trendSeries": "2.5px solid, full section hue, tension 0.3",
+      "comparison": "ink, dashed 5 3",
+      "bars": "square corners",
+      "tooltip": "ink ground, 2px radius, 12px Barlow 700 title",
+      "legend": "top-right, 12px/600, map-key swatches"
+    }
+  },
+  "components": [
+    {
+      "name": "Section Tabs",
+      "kind": "nav",
+      "refersTo": "tab-health",
+      "description": "Top-bar anchor tabs, each in its section's full ISOM hue.",
+      "html": "<nav class=\"ds-tabs\"><a href=\"#\" class=\"ds-tab ds-tab-health\">Health</a><a href=\"#\" class=\"ds-tab ds-tab-run\">Run</a><a href=\"#\" class=\"ds-tab ds-tab-gym\">Gym</a></nav>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-tabs{display:flex;gap:6px;font-family:var(--font)}.ds-tab{text-decoration:none;font-weight:600;font-size:14px;padding:6px 12px;border-radius:3px;color:#fff;transition:filter 150ms ease-out}.ds-tab:hover{filter:brightness(0.88)}.ds-tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}.ds-tab-health{background:var(--forest)}.ds-tab-run{background:var(--contour)}.ds-tab-gym{background:var(--water)}"
+    },
+    {
+      "name": "Sync Now Button",
+      "kind": "button",
+      "refersTo": "button-sync",
+      "description": "The only action button: ink outline, inverts on hover, progress rule while syncing.",
+      "html": "<div class=\"ds-sync-wrap\"><button class=\"ds-sync\">Sync now</button><div class=\"ds-sync-progress\" style=\"width:40%\"></div></div>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-sync-wrap{position:relative;display:inline-block}.ds-sync{font:700 14px var(--font);color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:3px;padding:7px 14px;min-width:108px;cursor:pointer;transition:background 150ms ease-out,color 150ms ease-out}.ds-sync:hover:not(:disabled){background:var(--ink);color:var(--paper)}.ds-sync:focus-visible{outline:2px solid var(--ink);outline-offset:2px}.ds-sync:disabled{cursor:progress;color:var(--ink-2);border-color:var(--ink-3)}.ds-sync-progress{position:absolute;left:2px;bottom:2px;height:3px;max-width:calc(100% - 4px);background:var(--ink)}"
+    },
+    {
+      "name": "Section Band",
+      "kind": "custom",
+      "refersTo": "section-band-health",
+      "description": "Full-bleed section opener in the section hue; white title and descriptor.",
+      "html": "<div class=\"ds-band ds-band-health\"><h2>Health</h2><p>Overnight recovery, sleep and daily strain</p></div><div class=\"ds-band ds-band-run\"><h2>Run</h2><p>Fitness, fatigue and volume</p></div><div class=\"ds-band ds-band-gym\"><h2>Gym</h2><p>Push / Pull / Legs split</p></div>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-band{display:flex;align-items:baseline;gap:14px;padding:12px 24px 11px;color:#fff;font-family:var(--font)}.ds-band h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-0.01em}.ds-band p{margin:0;font-size:14px;opacity:.92}.ds-band-health{background:var(--forest)}.ds-band-run{background:var(--contour)}.ds-band-gym{background:var(--water)}"
+    },
+    {
+      "name": "Panel Head with (i) Disclosure",
+      "kind": "custom",
+      "refersTo": "info-disclosure",
+      "description": "Unboxed panel heading; the (i) opens a caption explaining the metric.",
+      "html": "<details class=\"ds-phead ds-run\"><summary><h3>Training load</h3><span class=\"ds-pmeta\">CTL / ATL, 180d</span><span class=\"ds-info\"><svg width=\"10\" height=\"12\" viewBox=\"0 0 10 12\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"1.8\" r=\"1.4\" fill=\"currentColor\"/><rect x=\"3.9\" y=\"4.4\" width=\"2.2\" height=\"7\" fill=\"currentColor\"/></svg></span></summary><p class=\"ds-caption\">CTL (fitness, ~6wk avg) vs. ATL (fatigue, ~1wk avg).</p></details>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-phead{font-family:var(--font);color:var(--ink);padding:20px 0 22px;border-bottom:1px solid var(--hair)}.ds-phead summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px}.ds-phead summary::-webkit-details-marker{display:none}.ds-phead h3{margin:0;font-size:17px;font-weight:700}.ds-pmeta{font-size:14px;color:var(--ink-2)}.ds-run .ds-pmeta,.ds-run .ds-caption{color:var(--contour-ink)}.ds-info{margin-left:auto;width:22px;height:22px;flex:none;border:1.5px solid var(--ink-3);border-radius:50%;display:grid;place-items:center;color:var(--ink-2);align-self:center;transition:background 150ms ease-out,color 150ms ease-out,border-color 150ms ease-out}.ds-phead summary:hover .ds-info{border-color:var(--ink);color:var(--ink)}.ds-phead[open] .ds-info{background:var(--ink);border-color:var(--ink);color:var(--paper)}.ds-phead summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px}.ds-caption{font-size:14px;line-height:1.5;max-width:75ch;margin:8px 0 0}"
+    },
+    {
+      "name": "Race Row with Control Code",
+      "kind": "custom",
+      "refersTo": "control-code",
+      "description": "Race list row: overprint control circle with code, readiness bar, days to go; passed races cancel.",
+      "html": "<div class=\"ds-race\"><span class=\"ds-ctl\">A1</span><div><div class=\"ds-rname\">City 10K</div><div class=\"ds-rdate\">1 Mar · 10 km · goal sub 40:00</div><div class=\"ds-rtext\">20 / 45 km/wk peak target (44%) · 6w to go</div><div class=\"ds-track\"><div class=\"ds-fill\" style=\"width:27%\"></div></div></div><div class=\"ds-days\">43<span>days</span></div></div><div class=\"ds-race\"><span class=\"ds-ctl ds-fin\">A3</span><div><div class=\"ds-rname\">Spring Half Marathon</div><div class=\"ds-rdate\">3 May · 21.1 km</div></div><div class=\"ds-days\">197<span>days</span></div></div><div class=\"ds-race ds-passed\"><span class=\"ds-ctl\">C1</span><div><div class=\"ds-rname\">Club 5K</div><div class=\"ds-rdate\">1 Feb · 5 km</div></div><div class=\"ds-days\">6<span>days ago</span></div></div>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-race{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:start;padding:11px 0;border-bottom:1px solid var(--hair);font-family:var(--font);font-variant-numeric:tabular-nums;color:var(--ink)}.ds-ctl{width:30px;height:30px;border:2.5px solid var(--overprint);border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--overprint);box-sizing:border-box}.ds-fin{box-shadow:0 0 0 2px var(--paper),0 0 0 4.5px var(--overprint)}.ds-rname{font-weight:700;font-size:16px}.ds-rdate{font-size:14px;color:var(--ink-2)}.ds-rtext{font-size:13px;color:var(--ink-2);margin:7px 0 4px}.ds-track{background:var(--overprint-field);height:6px}.ds-fill{height:100%;background:var(--overprint)}.ds-days{font-weight:800;font-size:26px;color:var(--overprint);text-align:right;line-height:1}.ds-days span{display:block;font-size:12px;font-weight:600;color:var(--ink-3);margin-top:3px}.ds-passed .ds-rname{text-decoration:line-through;color:var(--ink-3)}.ds-passed .ds-ctl{border-color:var(--ink-3);color:var(--ink-3)}.ds-passed .ds-days{color:var(--ink-3);font-size:18px}"
+    },
+    {
+      "name": "Week Strip Day with Time Bar",
+      "kind": "custom",
+      "refersTo": "week-day-today",
+      "description": "Planned (outline) vs actual (solid) contour-brown time bars; today in open-land yellow; missed struck in red.",
+      "html": "<div class=\"ds-week\"><div class=\"ds-day\"><div class=\"ds-dname\">Mon, Feb 2 <span class=\"ds-status ds-done\"><svg width=\"12\" height=\"10\" viewBox=\"0 0 12 10\" aria-hidden=\"true\"><path d=\"M1 5.2 4.3 8.5 11 1.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"/></svg>Done</span></div><div class=\"ds-wname\">Easy long run</div><div class=\"ds-detail\">12.0km · 65min</div><div class=\"ds-bar\"><span class=\"ds-plan\" style=\"width:80%\"></span><span class=\"ds-act\" style=\"width:70%\"></span></div></div><div class=\"ds-day ds-today\"><div class=\"ds-dname\">Tue, Sep 8 <span class=\"ds-status\">Today</span></div><div class=\"ds-wname\">Tempo intervals</div><div class=\"ds-detail\">Planned ~50min</div><div class=\"ds-bar\"><span class=\"ds-plan\" style=\"width:88%\"></span></div></div><div class=\"ds-day ds-missed\"><div class=\"ds-dname\">Wed, Sep 9 <span class=\"ds-status ds-miss\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\"><path d=\"M1 1l8 8M9 1 1 9\" stroke=\"currentColor\" stroke-width=\"2\"/></svg>Missed</span></div><div class=\"ds-wname\">Easy run</div><div class=\"ds-detail\">No activity logged</div></div></div>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-week{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--ink);font-family:var(--font);color:var(--ink)}.ds-day{padding:12px 14px 14px;border-right:1px solid var(--hair)}.ds-day:last-child{border-right:none}.ds-today{background:var(--open-field);box-shadow:inset 0 4px 0 var(--open)}.ds-dname{font-size:13px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:6px}.ds-status{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink)}.ds-done{color:var(--good)}.ds-miss{color:var(--bad)}.ds-wname{font-weight:700;font-size:15px;margin-top:4px;line-height:1.25}.ds-missed .ds-wname{text-decoration:line-through;text-decoration-color:var(--bad);color:var(--ink-2)}.ds-detail{font-size:13px;color:var(--ink-2);margin-top:3px}.ds-bar{position:relative;height:6px;margin-top:8px}.ds-plan{position:absolute;left:0;top:0;bottom:0;border:1.5px solid var(--contour);box-sizing:border-box}.ds-act{position:absolute;left:0;top:0;bottom:0;background:var(--contour)}"
+    },
+    {
+      "name": "Today Tile with Contour Sparkline",
+      "kind": "custom",
+      "refersTo": "lead-state-field",
+      "description": "Primary Health tile on the forest field: value, trend, 30-day contour sparkline over a dashed mean.",
+      "html": "<div class=\"ds-field\"><div class=\"ds-tile\"><div class=\"ds-tlabel\">HRV</div><div class=\"ds-tval\">70<span>ms</span></div><div class=\"ds-trend\"><svg width=\"9\" height=\"8\" viewBox=\"0 0 9 8\" aria-hidden=\"true\"><path d=\"M4.5 0 9 8H0z\" fill=\"currentColor\"/></svg> 6 ms vs 7d avg</div><svg class=\"ds-contour\" viewBox=\"0 0 200 54\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><line x1=\"0\" x2=\"200\" y1=\"30\" y2=\"30\" stroke=\"#2C7A3A\" stroke-width=\"1\" stroke-dasharray=\"3 3\" opacity=\"0.6\"/><polyline points=\"0,30 20,36 40,26 60,40 80,28 100,34 120,22 140,38 160,30 180,24 200,12\" fill=\"none\" stroke=\"#1D5A28\" stroke-width=\"1.75\" stroke-linejoin=\"round\"/><circle cx=\"200\" cy=\"12\" r=\"2.5\" fill=\"#1D5A28\"/></svg><div class=\"ds-caxis\"><span>30d · 52–84</span><span>avg 65</span></div></div></div>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-field{background:var(--forest-field);padding:20px 24px;font-family:var(--font);font-variant-numeric:tabular-nums;color:var(--ink);max-width:280px}.ds-tlabel{font-size:14px;font-weight:600;color:var(--forest-ink)}.ds-tval{font-size:40px;font-weight:700;line-height:1.05;margin-top:2px}.ds-tval span{font-size:15px;font-weight:500;color:var(--forest-ink);margin-left:4px}.ds-trend{font-size:13px;font-weight:600;margin-top:3px;display:flex;align-items:center;gap:4px;color:var(--good)}.ds-contour{display:block;width:100%;height:54px;margin-top:10px;overflow:visible}.ds-caxis{display:flex;justify-content:space-between;font-size:12px;color:var(--forest-ink);margin-top:3px}"
+    },
+    {
+      "name": "Chart Legend Keys",
+      "kind": "custom",
+      "refersTo": "chart-tooltip",
+      "description": "Map-key legend: line series show a 20px stroke in their colour and dash, bar series a filled square.",
+      "html": "<div class=\"ds-legend\"><span><i class=\"ds-k ds-k-line\"></i>CTL (fitness)</span><span><i class=\"ds-k ds-k-dash\"></i>ATL (fatigue)</span><span><i class=\"ds-k ds-k-bar\"></i>Deep</span></div>",
+      "css": ":root{--paper:#FFFFFF;--ink:#1B1B1A;--ink-2:#474743;--ink-3:#66665F;--hair:#DDDDD6;--forest:#2C7A3A;--forest-ink:#1D5A28;--forest-field:#EAF4EA;--forest-hair:#C6DFC8;--contour:#A4521F;--contour-ink:#76380F;--water:#1E6BB0;--water-ink:#144C80;--water-field:#E7F0F9;--open:#F6C343;--open-field:#FFF5D6;--overprint:#A92D86;--overprint-field:#F7E6F1;--good:#2C7A3A;--warn:#C77A0E;--bad:#C2362B;--font:'Barlow','Helvetica Neue',Arial,sans-serif;}.ds-legend{display:flex;justify-content:flex-end;gap:14px;font:600 12px var(--font);color:var(--ink-3)}.ds-legend span{display:flex;align-items:center;gap:6px}.ds-k{display:inline-block}.ds-k-line{width:20px;height:0;border-top:2.5px solid var(--contour)}.ds-k-dash{width:20px;height:0;border-top:2.5px dashed var(--ink)}.ds-k-bar{width:10px;height:10px;background:var(--forest-ink)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Season as an Orienteering Course",
+    "overview": "The dashboard is printed like an orienteering map (IOF ISOM symbology). White map paper carries near-black ink; the map's own symbol colours are the data roles. The terrain is the body's state, coloured by section: Health is runnable-forest green, Run is contour brown, Gym is water blue. On top of the terrain sits the purple course overprint, the course the athlete set for themselves: races, drawn as a start triangle, control circles and a double finish circle joined by legs. Open-land yellow marks today and nothing else.\n\nDensity is high but ranked. One number per question gets hero size (Recovery, Form); everything else is set small, in tabular figures, divided by single ink rules instead of boxes. Surfaces are flat colour fields, like map areas, never cards. Nothing that was planned disappears: passed races and missed workouts are struck through, the way a map cancels a feature rather than erasing it.\n\nThe previous dark theme (Space Grotesk and IBM Plex Mono on slate with amber and blue) and the chalkboard/wallchart direction are both rejected and must not return.",
+    "keyCharacteristics": [
+      "Map-paper white ground, near-black ink, ISOM symbol colours as data roles.",
+      "Section hue at full strength on tabs and section bands; pale field tints for areas; deep \"ink\" shades for text on those fields.",
+      "Purple overprint is reserved for races and goals; yellow is reserved for today.",
+      "Barlow throughout, tabular figures everywhere.",
+      "No card chrome: one-pixel ink rules and hairlines divide the page.",
+      "Cancel, never vanish: passed and missed items stay visible, struck through."
+    ],
+    "rules": [
+      {
+        "name": "The One Meaning Rule",
+        "body": "Every hue has one job. Green is Health, brown is Run, blue is Gym, purple is races, yellow is today. A colour never borrows another section's meaning, and a new surface inherits these roles rather than adding accents.",
+        "section": "colors"
+      },
+      {
+        "name": "The Overprint Rule",
+        "body": "Purple appears only where the athlete's own course appears: races, goals and race readiness. If it isn't a race, it isn't purple.",
+        "section": "colors"
+      },
+      {
+        "name": "The Open Land Rule",
+        "body": "Yellow marks today and nothing else. Warning state uses burnt amber (`warn`), never yellow.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "`font-variant-numeric: tabular-nums` is set on the body. Every figure on the page aligns.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Hero Rule",
+        "body": "Only the morning's readiness answer (Recovery and Form) is set at display size. Everything else stays at 40px or below.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Card Chrome Rule",
+        "body": "Sections are colour fields divided by rules, never boxes. No panel gets a border on all four sides, a radius, or a shadow. Division is a single 1px ink rule between bands and a 1px hairline within them.",
+        "section": "layout"
+      },
+      {
+        "name": "The Printed Sheet Rule",
+        "body": "Nothing floats except the sticky top bar and the chart tooltip. No drop shadows, no blur, no layered cards.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give each section its ISOM hue at full strength on its tab and band, its pale field for areas, and its ink shade for text on that field.",
+      "Do keep purple (`overprint`) for races and goals, and yellow (`open`) for today.",
+      "Do divide with a single 1px ink rule between bands and a 1px hairline within them.",
+      "Do set every figure in Barlow with tabular numerals.",
+      "Do give every race one control code and use it identically on the course and in the list.",
+      "Do strike through passed races and missed workouts instead of hiding them.",
+      "Do draw time and progress at exact length: time bars and readiness bars are proportional, never decorative.",
+      "Do draw chart legends as map keys: line swatches for lines, filled squares for bars."
+    ],
+    "donts": [
+      "Don't wrap panels in cards: no four-sided borders, radii or drop shadows on content regions.",
+      "Don't use purple for anything that isn't a race or goal, or yellow for anything that isn't today; warnings use burnt amber.",
+      "Don't add a second typeface or a monospace for figures.",
+      "Don't remove passed or missed items from view.",
+      "Don't set anything but Recovery and Form at display size.",
+      "Don't revive the dark slate/amber theme with Space Grotesk and IBM Plex Mono, or the chalkboard/wallchart direction."
+    ]
+  }
+}

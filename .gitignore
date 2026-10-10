@@ -21,3 +21,15 @@ downloaded_files/
 fit/
 
 .DS_Store
+
+# Impeccable design tooling: review screenshots and decision mocks render real
+# personal data, and the rest is local session state.
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/hook.cache.json
+
+# Claude Code: machine-local settings and the vendored impeccable skill/agents
+.claude/settings.local.json
+.claude/skills/impeccable/
+.claude/agents/impeccable-*.md

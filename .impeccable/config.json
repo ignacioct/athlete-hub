@@ -1,0 +1,269 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-09T16:36:12.864Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-09T16:36:12.886Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pick.html"
+        ],
+        "createdAt": "2026-10-09T16:36:43.095Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-density.html"
+        ],
+        "createdAt": "2026-10-09T16:37:07.726Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-transit.html"
+        ],
+        "createdAt": "2026-10-09T16:37:32.122Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-09T16:37:55.481Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-09T17:08:36.265Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pick.html"
+        ],
+        "createdAt": "2026-10-09T17:08:36.288Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-density.html"
+        ],
+        "createdAt": "2026-10-09T17:08:36.307Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-transit.html"
+        ],
+        "createdAt": "2026-10-09T17:08:36.325Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-09T17:08:36.343Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pick.html"
+        ],
+        "createdAt": "2026-10-09T21:29:25.104Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-09T21:30:52.489Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pick.html"
+        ],
+        "createdAt": "2026-10-09T21:30:52.510Z",
+        "reason": "deliberate paper-stock material for this direction's world, not an AI-default cream ground; also a decision-round fixture"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pick.html"
+        ],
+        "createdAt": "2026-10-09T21:30:52.529Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-cassette.html"
+        ],
+        "createdAt": "2026-10-09T21:30:52.548Z",
+        "reason": "deliberate J-card paper-stock material for this direction's world, not an AI-default cream ground; also a decision-round fixture"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-10-10T09:25:44.935Z",
+        "reason": "decision-round sketch fixture, not shipping UI; build would darken fields to pass AA"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/r1-assigned.html"
+        ],
+        "createdAt": "2026-10-10T09:33:48.197Z",
+        "reason": "decision-round sketch fixture, not shipping UI; build will verify AA"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/r1-canon.html"
+        ],
+        "createdAt": "2026-10-10T09:33:48.216Z",
+        "reason": "decision-round sketch fixture, not shipping UI; build will verify AA"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-centre-rail.html"
+        ],
+        "createdAt": "2026-10-10T09:41:50.655Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-10T09:41:50.674Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/r1-assigned.html"
+        ],
+        "createdAt": "2026-10-10T09:41:50.692Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/r1-model-pick.html"
+        ],
+        "createdAt": "2026-10-10T09:41:50.710Z",
+        "reason": "decision-round sketch fixture, not shipping UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "dashboard/index.html"
+        ],
+        "createdAt": "2026-10-10T09:51:24.917Z",
+        "reason": "finish reviewer confirmed false positive: insets come from clamp() --pad-x (40px@1440, 16px@390); week cells carry own 12-14px padding"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-10T09:56:54.627Z",
+        "reason": "decision-round sketch of an unchosen direction; its own fonts by design, not shipping UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-10-10T09:56:54.648Z",
+        "reason": "decision-round sketch of an unchosen direction; its own fonts by design, not shipping UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-centre-rail.html"
+        ],
+        "createdAt": "2026-10-10T09:56:54.667Z",
+        "reason": "decision-round sketch of an unchosen direction; its own fonts by design, not shipping UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/r1-model-pick.html"
+        ],
+        "createdAt": "2026-10-10T09:56:54.686Z",
+        "reason": "decision-round sketch of an unchosen direction; its own fonts by design, not shipping UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/r1-challenger-emission-rail.html"
+        ],
+        "createdAt": "2026-10-10T09:56:54.705Z",
+        "reason": "decision-round sketch of an unchosen direction; its own fonts by design, not shipping UI"
+      }
+    ]
+  }
+}
