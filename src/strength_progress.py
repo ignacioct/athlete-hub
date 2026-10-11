@@ -29,6 +29,7 @@ CORE_LIFTS = [
     "Chest Press (Machine)",
     "Lat Pulldown (Cable)",
     "Seated Incline Curl (Dumbbell)",
+    "Bicep Curl (Dumbbell)",
     "Triceps Pushdown",
     "Squat (Barbell)",
     "Romanian Deadlift (Barbell)",
@@ -47,27 +48,45 @@ def _ppl_category(title: str | None) -> str | None:
 
 
 def weekly_split_status(conn, today: date) -> list[dict]:
-    """Push/Pull/Legs done-or-not for the current week (Monday-Sunday)."""
+    """Push/Pull/Legs status and first session details for this week."""
     monday = today - timedelta(days=today.weekday())
     sunday = monday + timedelta(days=6)
 
     sessions = conn.execute(
         """
-        SELECT title, start_time_utc FROM strength_sessions
-        WHERE date(start_time_utc) >= ? AND date(start_time_utc) <= ?
-        ORDER BY start_time_utc ASC
+        SELECT sess.id, sess.title, sess.start_time_utc, sess.duration_s,
+               COUNT(DISTINCT s.exercise) AS exercise_count,
+               COUNT(CASE WHEN s.set_type != 'warmup' THEN 1 END) AS working_sets
+        FROM strength_sessions sess
+        LEFT JOIN strength_sets s ON s.session_id = sess.id
+        WHERE date(sess.start_time_utc) >= ? AND date(sess.start_time_utc) <= ?
+        GROUP BY sess.id
+        ORDER BY sess.start_time_utc ASC
         """,
         (monday.isoformat(), sunday.isoformat()),
     ).fetchall()
 
-    done: dict[str, str] = {}
+    done: dict[str, dict] = {}
     for row in sessions:
         cat = _ppl_category(row["title"])
         if cat and cat not in done:
-            done[cat] = row["start_time_utc"][:10]
+            done[cat] = {
+                "date": row["start_time_utc"][:10],
+                "start_time_utc": row["start_time_utc"],
+                "duration_s": row["duration_s"],
+                "exercise_count": row["exercise_count"],
+                "working_sets": row["working_sets"],
+                "exercises": [
+                    r["exercise"] for r in conn.execute(
+                        """SELECT exercise FROM strength_sets
+                           WHERE session_id = ? GROUP BY exercise ORDER BY MIN(id) LIMIT 3""",
+                        (row["id"],),
+                    )
+                ],
+            }
 
     return [
-        {"category": cat, "done": cat in done, "date": done.get(cat)}
+        {"category": cat, "done": cat in done, **done.get(cat, {"date": None})}
         for cat in ("Push", "Pull", "Legs")
     ]
 

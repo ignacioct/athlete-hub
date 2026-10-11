@@ -320,7 +320,7 @@
   .chart-wrap { position: relative; height: 200px; margin-top: 14px; }
   .chart-wrap.h-s { height: 170px; }
   .chart-wrap.h-l { height: 260px; }
-  .chart-wrap.h-xl { height: 340px; }
+  .chart-wrap.h-xl { height: 600px; }
   canvas { max-width: 100%; }
 
   .empty { color: var(--ink-3); font-size: 14px; padding: 12px 0; }
@@ -333,6 +333,11 @@
   .split-category { font-size: 18px; font-weight: 700; }
   .split-status { font-size: 14px; color: var(--ink-3); margin-top: 4px; display: flex; align-items: center; gap: 5px; }
   .split-status.done { color: var(--water-ink); font-weight: 600; }
+  .split-detail { font-size: 14px; color: var(--ink-2); margin-top: 8px; }
+  .split-detail + .split-detail { margin-top: 4px; }
+  .split-exercises { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--water-hair); font-size: 13px; color: var(--ink-2); }
+  .split-exercises b { display: block; color: var(--water-ink); margin-bottom: 3px; }
+  .split-exercises .more { color: var(--ink-3); margin-top: 2px; }
 
   /* recent PRs */
   #recent-prs { margin-top: 8px; column-count: 2; column-gap: 32px; }
@@ -385,6 +390,8 @@
   }
   .meta-short { display: none; }
   @media (max-width: 520px) {
+    .split-row { grid-template-columns: 1fr; }
+    .split-item + .split-item { border-left: none; border-top: 1px solid var(--water-hair); }
     .meta-long { display: none; }
     .meta-short { display: inline; }
     .header-right { width: 100%; justify-content: space-between; padding-bottom: 10px; }
@@ -594,7 +601,7 @@
       <div class="panel span-12">
         <details class="phead">
           <summary><h3>Estimated 1RM</h3><span class="pmeta">core lifts</span><span class="info" title="About this chart"><svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><circle cx="5" cy="1.8" r="1.4" fill="currentColor"/><rect x="3.9" y="4.4" width="2.2" height="7" fill="currentColor"/></svg></span></summary>
-          <p class="caption">Best non-warmup set each session, converted via the Epley formula — an estimate, not a tested max.</p>
+          <p class="caption">Best non-warmup set each session, converted via the Epley formula — an estimate, not a tested max. Click a lift in the legend to focus it; click again to show all.</p>
         </details>
         <div id="core-lifts-empty"></div>
         <div class="chart-wrap h-xl"><canvas id="oneRMChart"></canvas></div>
@@ -663,6 +670,11 @@ function daysBetween(a, b) {
 
 function fmtDate(iso) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function escapeHtml(value) {
+  const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return String(value).replace(/[&<>"']/g, c => entities[c]);
 }
 
 // Form drawn as a map scale bar: −30 … +30, zones at ±9 (same split as before).
@@ -1314,12 +1326,17 @@ function renderVolumeChart(activities) {
 
 function renderWeeklySplit(split) {
   const el = document.getElementById('weekly-split');
-  el.innerHTML = `<div class="split-row">${(split || []).map(s => `
+  el.innerHTML = `<div class="split-row">${(split || []).map(s => {
+    const started = s.start_time_utc ? new Date(s.start_time_utc + 'Z') : null;
+    return `
     <div class="split-item ${s.done ? 'done' : ''}">
       <div class="split-category">${s.category}</div>
-      <div class="split-status ${s.done ? 'done' : ''}">${s.done ? ICON.check + ' ' + fmtDate(s.date) : 'Not yet'}</div>
+      <div class="split-status ${s.done ? 'done' : ''}">${s.done ? ICON.check + ' ' + (started ? started.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : fmtDate(s.date)) : 'Not yet'}</div>
+      ${started ? `<div class="split-detail">Started ${started.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}${s.duration_s != null ? ' · ' + fmtHoursMin(s.duration_s) : ''}</div>` : ''}
+      ${s.exercise_count != null ? `<div class="split-detail">${s.exercise_count} exercises · ${s.working_sets} working sets</div>` : ''}
+      ${s.exercises?.length ? `<div class="split-exercises"><b>Exercises</b>${s.exercises.map(ex => `<div>${escapeHtml(ex)}</div>`).join('')}${s.exercise_count > s.exercises.length ? `<div class="more">+${s.exercise_count - s.exercises.length} more</div>` : ''}</div>` : ''}
     </div>
-  `).join('')}</div>`;
+  `}).join('')}</div>`;
 }
 
 const PR_TYPE_LABELS = { best_weight: 'Best weight', best_volume: 'Best volume', best_1rm: 'Best est. 1RM' };
@@ -1353,8 +1370,8 @@ function renderOneRMChart(coreLifts) {
   emptyEl.innerHTML = '';
   canvas.parentElement.style.display = '';
 
-  const palette = ['#1E6BB0', '#0E3D66', '#5FA5DE', '#2B8C8C', '#1B1B1A', '#8E8E86'];
-  const dashes = [[], [], [], [], [6, 3], [2, 3]];
+  const palette = ['#1E6BB0', '#0E3D66', '#5FA5DE', '#2B8C8C', '#1B1B1A', '#8E8E86', '#76518C'];
+  const dashes = [[], [], [], [], [6, 3], [2, 3], [8, 4]];
   const allDates = [...new Set(entries.flatMap(([, points]) => points.map(p => p.date)))].sort();
 
   new Chart(document.getElementById('oneRMChart'), {
@@ -1380,7 +1397,12 @@ function renderOneRMChart(coreLifts) {
       responsive: true,
       maintainAspectRatio: false,
       scales: AXES({ title: { display: true, text: 'kg', color: C.ink3 } }),
-      plugins: { legend: LEGEND }
+      plugins: { legend: { ...LEGEND, onClick(_event, item, legend) {
+        const chart = legend.chart;
+        const focused = chart.data.datasets.every((_, i) => chart.isDatasetVisible(i) === (i === item.datasetIndex));
+        chart.data.datasets.forEach((_, i) => chart.setDatasetVisibility(i, focused || i === item.datasetIndex));
+        chart.update();
+      } } }
     }
   });
 }

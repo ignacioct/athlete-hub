@@ -126,13 +126,15 @@ def get_strength_progress() -> dict:
     """
     Strength training summary: this week's Push/Pull/Legs split status,
     estimated 1RM history for your core lifts (Chest Press Machine, Lat
-    Pulldown Cable, Seated Incline Curl Dumbbell, Triceps Pushdown, Squat
-    Barbell, Romanian Deadlift Barbell), and your most recent Hevy-flagged
-    PRs.
+    Pulldown Cable, Seated Incline Curl Dumbbell, Bicep Curl Dumbbell,
+    Triceps Pushdown, Squat Barbell, Romanian Deadlift Barbell), and your most
+    recent Hevy-flagged PRs.
 
-    weekly_split: one entry per category with done (bool) and the date it
-    was done, based on your Hevy session titles ("Push"/"Pull"/"Lower Body"
-    or "Legs") — not muscle-group inference.
+    weekly_split: one entry per category with done (bool), date, and for
+    completed sessions start_time_utc, duration_s, exercise_count,
+    working_sets, and the first three exercises. Categories come from Hevy
+    session titles ("Push", "Pull", "Lower Body", or "Legs"), not muscle-group
+    inference.
 
     core_lifts: {exercise: [{date, est_1rm_kg}, ...]}. Estimated via the
     Epley formula from each session's best non-warmup set — a real 1RM
