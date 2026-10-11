@@ -13,4 +13,31 @@
 #     goal_time: "3:30:00"   # optional
 #     notes: "Peak race of the season."
 
-races: []
+races:
+  - name: "V Carrera Popular El Cañaveral"
+    date: "2026-10-04"
+    distance_km: 5
+    priority: "C"
+    goal_time: "0:20:00"
+
+  - name: "Zara Athletics Speed Run"
+    date: "2026-11-22"
+    distance_km: 10
+    priority: "A"
+    goal_time: "0:39:00"
+
+  - name: "San Silvestre Vallecana"
+    date: "2026-12-31"
+    distance_km: 10
+    priority: "B"
+
+  - name: "Mitjà Marató Barcelona"
+    date: "2027-02-14"
+    distance_km: 21.1
+    priority: "A"
+    goal_time: "1:30:00"
+
+  - name: "Rock ’n’ Roll Madrid"
+    date: "2027-04-25"
+    distance_km: 21.1
+    priority: "A"
