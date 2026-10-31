@@ -28,7 +28,7 @@ is a different (private, mobile-app-facing) API entirely:
     own iter_paged() defaults to page_size=10, which breaks immediately.
     PAGE_SIZE is 5 here for that reason; confirmed offset-based pagination
     doesn't overlap/skip at that size.
-GARMIN_FIELD_MAP-style constants aren't used here since the shape is simple
+Field-map constants aren't used here since the shape is simple
 enough that inline `.get()` calls stay readable.
 """
 
@@ -76,8 +76,8 @@ def fetch_all_workouts() -> list[dict]:
 
 def _epoch_to_iso(seconds) -> str | None:
     """Unix epoch seconds -> naive-UTC ISO string, matching the convention
-    the rest of this repo's start_time_utc columns already use (see
-    garmin_sync.py's docstring)."""
+    the rest of this repo's start_time_utc columns already use (Garmin's startTimeGMT,
+    stored without a timezone suffix)."""
     if seconds is None:
         return None
     return datetime.fromtimestamp(seconds, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")

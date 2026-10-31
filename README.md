@@ -5,14 +5,55 @@ TrainingPeaks → Garmin) data into one local database, exposes it to Claude
 through an MCP server so you can ask questions and plan ahead, and gives you
 a lightweight dashboard.
 
+## How it works
+
+```mermaid
+flowchart LR
+  subgraph sources [Where the data comes from]
+    watch["Forerunner 255 + Circa"]
+    tp["TrainingPeaks<br/>(club plan)"]
+    garmin["Garmin Connect"]
+    icu["intervals.icu"]
+    hevy["Hevy"]
+  end
+  watch --> garmin
+  tp --> garmin
+  garmin <-->|"activities in,<br/>planned workouts out"| icu
+
+  subgraph sync ["scripts/sync_all.py"]
+    gs["garmin_sync.py"]
+    is["intervals_sync.py"]
+    hs["hevy_sync.py"]
+  end
+  garmin -->|"Personal API:<br/>activities, daily metrics"| gs
+  garmin -.->|"garmin-givemydata:<br/>club workout calendar"| gs
+  icu -->|"REST API: activities, CTL/ATL,<br/>VO2 max, planned workouts"| is
+  hevy -->|"hevy-unofficial:<br/>sessions and sets"| hs
+
+  gs & is & hs --> db[("data/athlete.db")]
+  db --> gen["generate_data.py"] --> json["data.json"] --> dash["Dashboard<br/>(dashboard/server.py)"]
+  db --> mcp["MCP server<br/>(mcp_server/server.py)"] <--> claude["Claude"]
+  dash -->|"Sync now"| sync
+  mcp -->|"sync_now"| sync
+  mcp -->|"create_workout,<br/>add_upcoming_race"| icu
+```
+
+Each sync reads three sources and writes them into one SQLite file,
+`data/athlete.db`. The dashboard and the MCP server only read that file, and
+either one can start a new sync. The dashed line is the one unofficial
+Garmin path left: if it breaks, only the club calendar goes stale. Workouts
+and races go the other way: the MCP server creates them on intervals.icu,
+and intervals.icu sends planned workouts to the watch through its Garmin
+connection.
+
 ## Why it's built this way
 
 | Source | Reality | What this repo does |
 |---|---|---|
-| Garmin Connect | No personal API exists. Garmin only grants API access to approved companies. Every "Garmin API" you'll find (including the one this repo wraps) is unofficial and can break when Garmin changes something. | `src/garmin_sync.py` wraps [`garmin-givemydata`](https://github.com/nrvim/garmin-givemydata), the current best-maintained unofficial exporter, and normalizes its output into our schema. |
-| TrainingPeaks | Personal API access isn't available — TrainingPeaks only approves commercial partners. | Not integrated directly. Your club's uploads already sync into Garmin Connect, so completed workouts arrive via the regular Garmin sync for free. *Planned* future workouts from the club's plan are a separate story — see `fetch_future_workout_schedule()` in "What's genuinely fragile here" below. |
+| Garmin Connect | Since October 2026 there's an official, read-only [Personal API](https://developer.garmin.com/gc-developer-program/personal/personal-api) for your own data. It covers activities and daily health metrics, but not the workout calendar or VO2 max. | `src/garmin_sync.py` reads activities and daily metrics through Garmin's own client, [`garmin-connect-personal-api-python`](https://github.com/garmin/connect-personal-api-python). The club's workout calendar still comes from [`garmin-givemydata`](https://github.com/nrvim/garmin-givemydata), an unofficial exporter, and VO2 max comes from intervals.icu. |
+| TrainingPeaks | Personal API access isn't available — TrainingPeaks only approves commercial partners. | Not integrated directly. Your club's uploads already sync into Garmin Connect, so completed workouts arrive via the regular Garmin sync for free. *Planned* future workouts from the club's plan are a separate story — see `fetch_workout_schedule()` in "What's genuinely fragile here" below. |
 | Hevy | Has a real, documented, official API — but it's Pro-only, and this account isn't Pro. | `src/hevy_sync.py` uses [`hevy-unofficial`](https://pypi.org/project/hevy-unofficial/) instead, a reverse-engineered client for the same private API the mobile app uses, authenticated via a session token instead of an API key. See "What's genuinely fragile here" — this is a much less proven dependency than the others. |
-| intervals.icu | Free account, full official REST API, and it already has a mature, reliable two-way Garmin sync — including pushing planned/structured workouts to your watch. | Used for two jobs: (1) a second read of your running data with training-load metrics (CTL/ATL/TSB) already computed, and (2) the **write path** — this repo creates workouts here, and intervals.icu's existing Garmin sync gets them onto your Forerunner. We deliberately don't try to write to Garmin directly; that path is far less reliable. |
+| intervals.icu | Free account, full official REST API, and it already has a mature, reliable two-way Garmin sync — including pushing planned/structured workouts to your watch. | Used for two jobs: (1) a second read of your running data with training-load metrics (CTL/ATL/TSB) already computed, plus VO2 max, and (2) the **write path** — this repo creates workouts here, and intervals.icu's existing Garmin sync gets them onto your Forerunner. We deliberately don't try to write to Garmin directly; that path is far less reliable. |
 
 **You'll need a free intervals.icu account** with your Garmin connected there
 (Settings → Connections → tick "Upload planned workouts"). That single
@@ -25,7 +66,7 @@ work without touching Garmin's unofficial write endpoints at all.
 athlete-hub/
 ├── src/
 │   ├── db.py                # SQLite schema + connection helper
-│   ├── garmin_sync.py       # Garmin -> unified DB (via garmin-givemydata)
+│   ├── garmin_sync.py       # Garmin -> unified DB (Personal API; club calendar via garmin-givemydata)
 │   ├── hevy_sync.py         # Hevy -> unified DB (via hevy-unofficial)
 │   ├── intervals_sync.py    # intervals.icu -> unified DB, and DB -> intervals.icu (workout push)
 │   ├── races.py             # CRUD for upcoming races
@@ -64,23 +105,23 @@ athlete-hub/
      once (see that file's docstring) — Hevy isn't Pro-gated here, but does need a
      one-time manual token capture; see "What's genuinely fragile here".
    - `INTERVALS_ATHLETE_ID` and `INTERVALS_API_KEY` — from https://intervals.icu/settings ("Developer Settings")
-   - `GARMIN_EMAIL` / `GARMIN_PASSWORD` — your Garmin Connect login (used locally only, never sent anywhere but Garmin)
+   - `GARMIN_PERSONAL_API_KEY`: create it at https://connect.garmin.com/app/settings/personalApiToken. Keys expire (30 days to 1 year, you choose); Garmin emails you a week before.
+   - `GARMIN_EMAIL` / `GARMIN_PASSWORD`: your Garmin Connect login, used only to read the club's workout calendar. It stays on your machine and is only sent to Garmin.
 
 4. **First sync:**
    ```bash
    uv run scripts/sync_all.py
    ```
 
-5. **If you change the Garmin export mapping later:** `garmin-givemydata`'s
-   export format can shift between versions. `GARMIN_FIELD_MAP` /
-   `WELLNESS_SOURCES` near the top of `garmin_sync.py` are already verified
-   against a real export (see that file's docstring for specifics), but if a
-   future version of the library changes field names, re-run:
+5. **If Garmin's field names change:** the mapping in `fetch_wellness()` and
+   `sync_to_db()` in `garmin_sync.py` was checked against real Personal API
+   responses. To check it again, run:
    ```bash
    uv run -m src.garmin_sync --inspect
    ```
-   This prints the raw export structure without writing to the DB, so you can
-   compare it against the field maps and fix anything that's drifted.
+   This prints the latest raw activity and the latest mapped wellness day
+   without writing to the DB. `uv run python -m tests.test_garmin_sync` covers
+   the mapping, pagination, and date chunking offline.
 
 6. **View the dashboard:**
    ```bash
@@ -107,10 +148,8 @@ miss runs. Instead, syncing is on-demand from two places that both just call
 - **Asking Claude to sync** (`mcp_server/server.py`'s `sync_now` tool) — works
   from any Claude session with the MCP server configured.
 
-Both default to a 7-day lookback (`garmin-givemydata`'s export always dumps
-its full accumulated local history regardless of `--days`, so `athlete.db`
-still ends up complete — the short window just keeps each sync's Garmin
-login/fetch step fast). Run `uv run scripts/sync_all.py --days 90` manually
+Both default to a 7-day lookback. Older rows stay in `athlete.db`, so the
+short window only decides how far back each sync refreshes. Run `uv run scripts/sync_all.py --days 90` manually
 for a first-time backfill or if you've gone a while between syncs.
 
 ## Phone access
@@ -144,12 +183,14 @@ on the `feature/mobile-mcp-access` branch.
 
 ## What's genuinely fragile here
 
-- Garmin sync: unofficial, can break on Garmin's schedule, and running it
-  from a cloud IP (e.g. GitHub Actions) is more likely to get blocked than a
-  home connection — see `garmin-givemydata`'s own notes on this.
-- `garmin_sync.fetch_future_workout_schedule()` (powers the "this week's
+- Garmin activities and daily metrics: official Personal API, stable. The
+  API key expires on the date you picked when creating it, and the sync fails
+  with a clear error until you put a new one in `.env`.
+- `garmin_sync.fetch_workout_schedule()` (powers the "this week's
   workouts" panel's view into your club's TrainingPeaks -> Garmin plan): the
-  most fragile thing in this repo. `garmin-givemydata`'s own CLI can't fetch
+  most fragile thing in this repo, and the only reason `garmin-givemydata`
+  and your Garmin password are still needed. The Personal API has no
+  calendar endpoint, and `garmin-givemydata`'s own CLI can't fetch
   future-dated anything (every fetch mode hardcodes `end_date=today`), so
   this reaches into `garmin_client.GarminClient`'s *private*
   `_fetch_batch()` method — underscore-prefixed, not a public API — to run
@@ -159,7 +200,7 @@ on the `feature/mobile-mcp-access` branch.
   updates it.
 - `src/hevy_sync.py`: uses `hevy-unofficial`, a reverse-engineered client
   with **0 GitHub stars/forks, 6 commits, alpha version, one maintainer** —
-  no track record at all compared to `garmin-givemydata`. If Hevy changes
+  no track record at all. If Hevy changes
   their private API, there's no community to notice or patch it; that falls
   on us. Also: its automated Playwright browser login doesn't work for a
   Google-linked Hevy account — Google detects and blocks OAuth sign-ins

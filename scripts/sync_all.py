@@ -7,10 +7,9 @@ to sync (mcp_server/server.py's sync_now tool). Both call main() below.
 
     uv run scripts/sync_all.py --days 7
 
---days controls the Garmin/intervals.icu lookback window. Garmin's sync logs
-in via Selenium on every run, so a routine sync should use a short window (7
-days is plenty of overlap) rather than the 90-day default meant for
-first-time/manual backfills.
+--days controls the Garmin/intervals.icu lookback window. A routine sync should
+use a short window (7 days is plenty of overlap) rather than the 90-day
+default meant for first-time/manual backfills.
 """
 
 import argparse

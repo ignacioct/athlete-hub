@@ -172,13 +172,15 @@ def pull_to_db(days_back: int = 90) -> tuple[int, int]:
                 continue
             conn.execute(
                 """
-                INSERT INTO daily_metrics (date, resting_hr, hrv, sleep_score, weight_kg, ctl, atl, form)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO daily_metrics (date, resting_hr, hrv, sleep_score, weight_kg, vo2max_running, ctl, atl, form)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(date) DO UPDATE SET
                     resting_hr = COALESCE(excluded.resting_hr, daily_metrics.resting_hr),
                     hrv = COALESCE(excluded.hrv, daily_metrics.hrv),
                     sleep_score = COALESCE(excluded.sleep_score, daily_metrics.sleep_score),
                     weight_kg = COALESCE(excluded.weight_kg, daily_metrics.weight_kg),
+                    -- Existing value first: intervals.icu rounds VO2 max to an integer, older Garmin rows have decimals.
+                    vo2max_running = COALESCE(daily_metrics.vo2max_running, excluded.vo2max_running),
                     ctl = excluded.ctl,
                     atl = excluded.atl,
                     form = excluded.form,
@@ -190,6 +192,7 @@ def pull_to_db(days_back: int = 90) -> tuple[int, int]:
                     w.get("hrv"),
                     w.get("sleepScore"),
                     w.get("weight"),
+                    w.get("vo2max"),
                     w.get("ctl"),
                     w.get("atl"),
                     (w.get("ctl") - w.get("atl")) if w.get("ctl") is not None and w.get("atl") is not None else None,

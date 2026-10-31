@@ -36,7 +36,8 @@ def sync_now(days_back: int = 7) -> dict:
     behind this repo — the sync machine isn't guaranteed to be on — so this
     tool (and the dashboard's "Sync now" button) is how syncs actually happen.
 
-    Takes roughly 30-60s: Garmin's sync logs in via Selenium every time.
+    Takes roughly 30-60s, mostly the Selenium session that reads the club's
+    workout calendar from Garmin.
     days_back is the lookback window for Garmin/intervals.icu (default 7,
     plenty of overlap for routine use — only raise it for a backfill).
 
