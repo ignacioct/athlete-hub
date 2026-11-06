@@ -18,8 +18,11 @@ _COLUMNS = (
     "avg_hr, max_hr, calories, elevation_gain_m, avg_pace_s_per_km, training_load"
 )
 
+# Both copies of the 2026-10-28 treadmill walk: Garmin logged it as a run
+# (1.9 km at 21 min/km), so it inflated weekly running volume.
 _DEDUP_CLAUSE = """
     is_strength_duplicate = 0
+    AND id NOT IN ('intervals:i202887550', 'garmin:24884926681')
     AND NOT (
         source = 'garmin'
         AND EXISTS (
