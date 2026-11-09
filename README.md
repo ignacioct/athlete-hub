@@ -125,8 +125,8 @@ athlete-hub/
 
 6. **View the dashboard:**
    ```bash
-   uv run dashboard/server.py 8080
-   # open http://localhost:8080
+   uv run dashboard/server.py 8787
+   # open http://localhost:8787
    ```
    This serves the static dashboard *and* a "Sync now" button in the header —
    there's no cron job (see below for why), so this is the primary way data

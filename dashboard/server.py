@@ -7,7 +7,7 @@ actually looking at the dashboard (or ask Claude, via the MCP server's
 sync_now tool) rather than on a schedule.
 
 Run:
-    uv run dashboard/server.py [port]   # defaults to 8080
+    uv run dashboard/server.py [port]   # defaults to 8787
 """
 
 import http.server
@@ -60,7 +60,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 def main():
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8787
     with http.server.ThreadingHTTPServer(("", port), Handler) as httpd:
         print(f"Dashboard + sync endpoint on http://localhost:{port}")
         httpd.serve_forever()
