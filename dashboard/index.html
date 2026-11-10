@@ -220,6 +220,9 @@
   /* ---- race build (course overprint) ---- */
   .lead-course .lh { color: var(--overprint); }
   #course { display: block; width: 100%; height: auto; margin: 10px 0 4px; }
+#course-volume { display: block; width: 100%; height: auto; margin: 6px 0 2px; }
+.vol-key { font-size: 12px; color: var(--ink-3); display: flex; gap: 14px; }
+.vol-key i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; }
   .race-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 11px 0; border-bottom: 1px solid var(--hair); }
   .race-card:last-child { border-bottom: none; }
   .ctl {
@@ -232,9 +235,6 @@
   .race-date { font-size: 14px; color: var(--ink-2); }
   .race-days { font-weight: 800; font-size: 26px; color: var(--overprint); text-align: right; line-height: 1; }
   .race-days .unit { display: block; font-size: 12px; font-weight: 600; color: var(--ink-3); margin-top: 3px; }
-  .race-card.passed .race-name { text-decoration: line-through; color: var(--ink-3); }
-  .race-card.passed .ctl { border-color: var(--ink-3); color: var(--ink-3); }
-  .race-card.passed .race-days { color: var(--ink-3); font-size: 18px; }
   .readiness-row { margin-top: 7px; }
   .readiness-text { font-size: 13px; color: var(--ink-2); margin-bottom: 4px; }
   .readiness-bar-track { background: var(--overprint-field); height: 6px; }
@@ -360,7 +360,7 @@
     /* course map beside the race list, so the column is as short as the state column */
     .lead-course { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); column-gap: 32px; align-content: start; }
     .lead-course > .phead { grid-column: 1 / -1; }
-    .lead-course #course { align-self: start; margin-top: 4px; }
+    .lead-course .course-col { align-self: start; margin-top: 4px; }
   }
   @media (max-width: 1100px) {
     .lead-grid { grid-template-columns: 1fr; }
@@ -463,9 +463,13 @@
   <div class="lead-course">
     <details class="phead">
       <summary><h2 class="lh">Race build</h2><span class="info" title="About race readiness"><svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><circle cx="5" cy="1.8" r="1.4" fill="currentColor"/><rect x="3.9" y="4.4" width="2.2" height="7" fill="currentColor"/></svg></span></summary>
-      <p class="caption">Course legs are drawn to time scale from today. Bars show current vs. peak-week running volume, a coaching rule of thumb by distance, scaled down for B/C-priority races since you're not specifically peaking for those. Not personalized beyond that.</p>
+      <p class="caption">The course and the volume strip under it share one time scale, so each leg sits over its own weeks: bars are weekly run km, the line is the season plan (data/training_plan.json). Each race shows the peak planned week of its block. The race you're training for now also shows your last 2 full weeks against the plan; the bar is that 2-week compliance.</p>
     </details>
-    <svg id="course" viewBox="0 0 470 150" aria-hidden="true"></svg>
+    <div class="course-col">
+      <svg id="course" viewBox="0 0 470 150" aria-hidden="true"></svg>
+      <svg id="course-volume" viewBox="0 0 470 140" role="img" aria-label="Weekly running km against the season plan"></svg>
+      <div class="vol-key"><span><i style="background:var(--contour)"></i>Run km</span><span><i style="border-top:2px solid var(--overprint);height:0"></i>Plan</span></div>
+    </div>
     <div id="races"></div>
   </div>
  </div>
@@ -712,15 +716,20 @@ function drawDial(form) {
 
 function renderReadiness(readiness, daysToRace) {
   if (!readiness || daysToRace < 0) return '';
-  const { current_weekly_km, target_peak_weekly_km, pct_of_target } = readiness;
+  const { plan_peak_km, actual_avg_km, planned_avg_km, pct_of_plan } = readiness;
   // Weeks come from the same live day count as the days figure, not from
   // generated_at, so the two numbers in a row always agree.
   const weeks_to_race = Math.floor(daysToRace / 7);
-  const barPct = Math.min(100, pct_of_target);
+  const peak = plan_peak_km == null ? 'No plan yet' : `Plan peak ${plan_peak_km} km/wk`;
+  const parts = [];
+  if (pct_of_plan != null) parts.push(`Last 2 wks ${actual_avg_km} / ${planned_avg_km} km planned (${pct_of_plan}%)`);
+  parts.push(peak, `${weeks_to_race}w to go`);
+  const bar = pct_of_plan == null ? '' :
+    `<div class="readiness-bar-track"><div class="readiness-bar-fill" style="width:${Math.min(100, pct_of_plan)}%"></div></div>`;
   return `
     <div class="readiness-row">
-      <div class="readiness-text">${current_weekly_km} / ${target_peak_weekly_km} km/wk peak target (${pct_of_target}%) · ${weeks_to_race}w to go</div>
-      <div class="readiness-bar-track"><div class="readiness-bar-fill" style="width:${barPct}%"></div></div>
+      <div class="readiness-text">${parts.join(' · ')}</div>
+      ${bar}
     </div>
   `;
 }
@@ -741,6 +750,16 @@ function finishIndex(races) {
   return races.length - 1;
 }
 
+// One time scale for the course and the volume strip under it, so each leg
+// sits over its own training weeks. d = days from today.
+function courseScale(races) {
+  const today = new Date().toISOString().slice(0, 10);
+  const ds = races.slice(0, 6).map(r => daysBetween(today, r.date));
+  const back = Math.max(42, ...ds.map(d => -d)), ahead = Math.max(1, ...ds);
+  const x0 = 24, x1 = 448;
+  return { back, ahead, xOf: d => x0 + (back + d) / (back + ahead) * (x1 - x0) };
+}
+
 function renderCourse(races) {
   const svg = document.getElementById('course');
   const today = new Date().toISOString().slice(0, 10);
@@ -749,21 +768,21 @@ function renderCourse(races) {
   svg.style.display = '';
   const codes = raceCodes(shown);
   const fin = finishIndex(shown);
+  const { xOf } = courseScale(races);
   const all = shown.map((r, i) => ({ d: daysBetween(today, r.date), code: codes[i], fin: i === fin }));
   // Nothing disappears, it cancels: passed controls sit left of today, struck.
   const passed = all.filter(p => p.d < 0), ahead = all.filter(p => p.d >= 0);
-  const r = 13, gap = 44, xs = 24 + passed.length * gap, x1 = 448;
-  const maxD = Math.max(1, ...ahead.map(p => p.d));
+  const r = 13;
   const ys = [44, 104, 56, 112, 40, 96];
   const stroke = C.overprint, dim = C.ink3;
   let s = '';
-  passed.forEach((p, i) => {
-    const x = 24 + i * gap, y = 112;
+  passed.forEach(p => {
+    const x = Math.min(xOf(p.d), xOf(0) - 32), y = 112;  // keep clear of the today marker
     s += `<circle cx="${x}" cy="${y}" r="${r}" fill="#FFFFFF" stroke="${dim}" stroke-width="2"/>`;
     s += `<line x1="${x - r - 3}" y1="${y + r + 3}" x2="${x + r + 3}" y2="${y - r - 3}" stroke="${dim}" stroke-width="2"/>`;
     s += `<text x="${x}" y="${y - r - 7}" text-anchor="middle" font-family="Barlow" font-size="13" font-weight="800" fill="${dim}">${p.code}</text>`;
   });
-  const nodes = [{ x: xs, y: 112, start: true }].concat(ahead.map((p, i) => ({ x: xs + 18 + (p.d / maxD) * (x1 - xs - 18), y: ys[i % ys.length], ...p })));
+  const nodes = [{ x: xOf(0), y: 112, start: true }].concat(ahead.map((p, i) => ({ x: xOf(p.d), y: ys[i % ys.length], ...p })));
   for (let i = 1; i < nodes.length; i++) {
     const a = nodes[i - 1], b = nodes[i];
     const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
@@ -783,6 +802,67 @@ function renderCourse(races) {
   svg.innerHTML = s;
 }
 
+function addDays(iso, n) {
+  const d = new Date(iso.slice(0, 10) + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+function mondayOf(iso) {
+  return addDays(iso, -((new Date(iso.slice(0, 10) + 'T00:00:00Z').getUTCDay() + 6) % 7));
+}
+
+// Weekly run km (bars) under the plan (step line), on the course's time scale.
+function renderCourseVolume(races, plan, activities) {
+  const svg = document.getElementById('course-volume');
+  const key = svg.nextElementSibling;
+  if (!races.length) { svg.style.display = key.style.display = 'none'; return; }
+  const today = new Date().toISOString().slice(0, 10);
+  const { back, ahead, xOf } = courseScale(races);
+  const actual = {};
+  activities.filter(a => (a.sport || '').toLowerCase().includes('run')).forEach(a => {
+    const w = mondayOf(a.start_time_utc);
+    actual[w] = (actual[w] || 0) + (a.distance_m || 0) / 1000;
+  });
+  const top = 6, base = 118;
+  const maxKm = Math.max(20, ...Object.values(plan).map(p => p.km), ...Object.values(actual));
+  const yOf = km => base - km / maxKm * (base - top);
+  const clampX = x => Math.max(24, Math.min(448, x));
+  const thisMonday = mondayOf(today);
+  let s = '', step = '', prevPlan = false;
+
+  for (let km = 20; km <= maxKm; km += 20) {
+    s += `<line x1="24" x2="448" y1="${yOf(km)}" y2="${yOf(km)}" stroke="${C.hair}"/>`;
+    s += `<text x="0" y="${yOf(km) + 4}" font-size="10" fill="${C.ink3}">${km}</text>`;
+  }
+  s += `<line x1="24" x2="448" y1="${base}" y2="${base}" stroke="${C.ink3}"/>`;
+
+  for (let w = mondayOf(addDays(today, -back)); daysBetween(today, w) < ahead; w = addDays(w, 7)) {
+    const d = daysBetween(today, w);
+    const x0 = clampX(xOf(d)), x1 = clampX(xOf(d + 7));
+    const km = actual[w], p = plan[w];
+    const label = `Week of ${fmtDate(w)}: ${km != null ? km.toFixed(1) + ' km run' : 'no runs'}${p ? ` / ${p.km} km planned` : ''}`;
+    s += `<g><title>${label}</title><rect x="${x0}" y="${top}" width="${x1 - x0}" height="${base - top}" fill="transparent"/>`;
+    if (km && w <= thisMonday) {
+      s += `<rect x="${x0 + 1}" y="${yOf(km)}" width="${Math.max(1, x1 - x0 - 2)}" height="${base - yOf(km)}" fill="${w === thisMonday ? C.contourLight : C.contour}"/>`;
+    }
+    s += '</g>';
+    if (p) step += `${prevPlan ? 'L' : 'M'}${x0} ${yOf(p.km)} L${x1} ${yOf(p.km)} `;
+    prevPlan = !!p;
+  }
+  s += `<path d="${step}" fill="none" stroke="${C.overprint}" stroke-width="2" pointer-events="none"/>`;
+  s += `<line x1="${xOf(0)}" x2="${xOf(0)}" y1="${top}" y2="${base}" stroke="${C.overprint}" stroke-dasharray="3 3" pointer-events="none"/>`;
+
+  for (let m = addDays(today, -back).slice(0, 8) + '01'; daysBetween(today, m) < ahead; m = addDays(m, 31).slice(0, 8) + '01') {
+    const d = daysBetween(today, m);
+    if (d < -back) continue;
+    const label = new Date(m + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' });
+    s += `<line x1="${xOf(d)}" x2="${xOf(d)}" y1="${base}" y2="${base + 4}" stroke="${C.ink3}"/>`;
+    s += `<text x="${xOf(d) + 3}" y="${base + 14}" font-size="11" fill="${C.ink3}">${label}</text>`;
+  }
+  svg.innerHTML = s;
+}
+
 function renderRaces(races) {
   const el = document.getElementById('races');
   if (!races || races.length === 0) {
@@ -793,19 +873,22 @@ function renderRaces(races) {
   const shown = races.slice(0, 6);
   const codes = raceCodes(shown);
   const fin = finishIndex(shown);
-  el.innerHTML = shown.map((r, i) => {
+  // Passed races stay on the course map only; the list is what's ahead.
+  const rows = shown.map((r, i) => {
     const d = daysBetween(today, r.date);
+    if (d < 0) return '';
     return `
-    <div class="race-card${d < 0 ? ' passed' : ''}">
+    <div class="race-card">
       <span class="ctl${i === fin ? ' finish' : ''}" title="Priority ${r.priority || 'B'}">${codes[i]}</span>
       <div>
         <div class="race-name">${r.name}</div>
         <div class="race-date">${fmtDate(r.date)}${r.distance_km ? ' · ' + r.distance_km + ' km' : ''}${r.goal_time ? ' · goal ' + r.goal_time : ''}</div>
         ${renderReadiness(r.readiness, d)}
       </div>
-      <div class="race-days">${d < 0 ? -d : d}<span class="unit">${d < 0 ? 'days ago' : 'days'}</span></div>
+      <div class="race-days">${d}<span class="unit">days</span></div>
     </div>`;
   }).join('');
+  el.innerHTML = rows || '<div class="empty">No upcoming races yet. Ask Claude to add one.</div>';
 }
 
 function fmtMin(seconds) {
@@ -1425,6 +1508,7 @@ function renderOneRMChart(coreLifts) {
 
   renderRecoveryLead(daily);
   renderCourse(data.races || []);
+  renderCourseVolume(data.races || [], data.training_plan || {}, data.activities || []);
   renderRaces(data.races || []);
   renderTiles(daily);
   renderWeeklyWorkouts(data.weekly_workouts || []);

@@ -20,7 +20,7 @@ from scripts.sync_all import main as run_sync_all
 from src.activities import get_deduped_activities
 from src.db import get_conn, init_db
 from src.intervals_sync import push_workout
-from src.race_readiness import race_readiness
+from src.race_readiness import load_plan, race_readiness
 from src.races import add_race, list_races, update_race_status
 from src.strength_progress import core_lift_1rm_history, recent_prs, weekly_split_status
 from src.weekly_workouts import get_weekly_workouts as _get_weekly_workouts
@@ -183,18 +183,19 @@ def get_race_calendar(status: str = "upcoming") -> list[dict]:
     """
     Get races. status is 'upcoming' (default), 'done', or 'cancelled'.
 
-    Each race includes a `readiness` dict (None if it has no distance_km to
-    size a target from): current_weekly_km (trailing 4-week average running
-    volume, excluding the current partial week), target_peak_weekly_km (a
-    coaching rule-of-thumb peak-week target for that race's distance,
-    scaled by its A/B/C priority — see src/race_readiness.py for the exact
-    bands and reasoning), pct_of_target, and weeks_to_race.
+    Each race includes a `readiness` dict measured against the season plan
+    (data/training_plan.json): plan_peak_km (peak planned week of the race's
+    block, None if unplanned) and, for the race currently being trained for,
+    actual_avg_km / planned_avg_km / pct_of_plan over the last 2 full weeks
+    plus week_km / week_planned_km for the current week.
     """
     races = list_races(status)
     if status == "upcoming":
         with get_conn() as conn:
+            plan, prev_date = load_plan(), None
             for r in races:
-                r["readiness"] = race_readiness(conn, r)
+                r["readiness"] = race_readiness(conn, r, prev_date, plan)
+                prev_date = r["date"]
     return races
 
 

@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.activities import get_deduped_activities  # noqa: E402
 from src.db import get_conn, init_db  # noqa: E402
-from src.race_readiness import race_readiness  # noqa: E402
+from src.race_readiness import load_plan, race_readiness  # noqa: E402
 from src.strength_progress import core_lift_1rm_history, recent_prs, weekly_split_status  # noqa: E402
 from src.weekly_workouts import get_weekly_workouts  # noqa: E402
 
@@ -37,8 +37,10 @@ def main(days_back: int = 180) -> None:
         ]
 
         races = [dict(r) for r in conn.execute("SELECT * FROM races WHERE status = 'upcoming' ORDER BY date ASC").fetchall()]
+        plan, prev_date = load_plan(), None
         for r in races:
-            r["readiness"] = race_readiness(conn, r)
+            r["readiness"] = race_readiness(conn, r, prev_date, plan)
+            prev_date = r["date"]
 
         weekly_workouts = get_weekly_workouts(conn, date.today())
 
@@ -70,6 +72,7 @@ def main(days_back: int = 180) -> None:
                 "activities": activities,
                 "daily_metrics": daily,
                 "races": races,
+                "training_plan": plan,
                 "weekly_workouts": weekly_workouts,
                 "vo2max_history": vo2max_history,
                 "weekly_split": weekly_split,
